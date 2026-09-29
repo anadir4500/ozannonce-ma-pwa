@@ -1,0 +1,1384 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ÔZAnnonces — App</title>
+<style>
+:root{
+  --orange:#f97316; --orange-dark:#ea580c; --bg:#faf9f7; --card:#ffffff;
+  --text:#1f2937; --muted:#8b8f99; --border:#eee;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+  box-sizing:border-box;
+}
+*{box-sizing:border-box;}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;}
+body{display:flex;justify-content:center;}
+#phone{width:100%;max-width:430px;min-height:100vh;background:var(--bg);
+  display:flex;flex-direction:column;position:relative;overflow:hidden;}
+
+/* Header */
+header{padding:14px 20px 14px;background:linear-gradient(180deg,#fff7ed 0%,#ffffff 100%);
+  border-bottom:1px solid var(--border);position:sticky;top:0;z-index:5;
+  box-shadow:0 2px 8px -4px rgba(0,0,0,.06);}
+.logo{font-size:20px;font-weight:800;letter-spacing:.3px;margin-bottom:8px;text-align:left;}
+.logo span{text-shadow:0 3px 5px rgba(0,0,0,.32);}
+.logo .o{color:#2563eb;} .logo .z{color:#111827;} .logo .a{color:#dc2626;} .logo .rest{color:#111827;}
+header .greet{font-size:17px;font-weight:700;}
+header .sub{color:var(--muted);font-size:14px;margin-top:2px;}
+
+/* Screens */
+.screen{display:none;flex:1;overflow-y:auto;padding:16px 16px 90px;}
+.screen.active{display:block;}
+
+/* Search */
+.search{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--border);
+  border-radius:16px;padding:14px 16px;margin-bottom:18px;box-shadow:0 1px 3px rgba(0,0,0,.04);}
+.search input{border:none;outline:none;flex:1;font-size:15px;background:transparent;}
+.search span{font-size:18px;}
+
+/* Category grid */
+.cats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:22px;}
+.cat{background:#fff;border-radius:16px;padding:14px 6px;text-align:center;
+  border:1px solid var(--border);cursor:pointer;transition:transform .1s;}
+.cat:active{transform:scale(.95);}
+.cat .ico{font-size:24px;margin-bottom:6px;}
+.cat .lab{font-size:10px;color:var(--muted);font-weight:600;line-height:1.25;}
+
+h3.section{font-size:16px;margin:0 0 12px;font-weight:700;}
+
+/* Ad cards */
+.ad-list{display:flex;flex-direction:column;gap:12px;}
+.ad-card{background:#fff;border-radius:18px;border:1px solid var(--border);overflow:hidden;
+  display:flex;gap:12px;padding:10px;cursor:pointer;transition:transform .1s;}
+.ad-card:active{transform:scale(.98);}
+.ad-thumb{width:76px;height:76px;border-radius:14px;flex-shrink:0;display:flex;
+  align-items:center;justify-content:center;font-size:28px;color:#fff;overflow:hidden;}
+.ad-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
+.ad-info{flex:1;min-width:0;}
+.ad-title{font-weight:700;font-size:14.5px;margin-bottom:3px;}
+.ad-price{color:var(--orange-dark);font-weight:800;font-size:15px;}
+.ad-loc{color:var(--muted);font-size:12px;margin-top:4px;}
+
+.chips{display:flex;gap:8px;overflow-x:auto;margin-bottom:16px;padding-bottom:2px;}
+.chip{flex-shrink:0;padding:8px 16px;border-radius:999px;background:#fff;border:1px solid var(--border);
+  font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;}
+.chip.on{background:var(--orange);color:#fff;border-color:var(--orange);}
+
+/* CTA banner */
+.banner{position:relative;overflow:hidden;background:linear-gradient(135deg,#fb923c,#dc2626);border-radius:20px;
+  padding:22px;color:#fff;margin-bottom:22px;box-shadow:0 8px 20px -6px rgba(220,38,38,.45);}
+.banner::after{content:'';position:absolute;top:-30px;right:-30px;width:110px;height:110px;
+  background:rgba(255,255,255,.18);border-radius:50%;}
+.banner b{font-size:17px;display:block;margin-bottom:4px;position:relative;}
+.banner span{font-size:13px;opacity:.95;position:relative;display:block;}
+
+/* Buttons */
+.btn{display:block;width:100%;background:var(--orange);color:#fff;border:none;border-radius:14px;
+  padding:15px;font-size:15.5px;font-weight:700;cursor:pointer;text-align:center;}
+.btn:active{background:var(--orange-dark);}
+.btn.ghost{background:#fff;color:var(--text);border:1.5px solid var(--border);}
+.btn.danger{background:#fff;color:#dc2626;border:1.5px solid #fecaca;}
+.btn.small{padding:10px;font-size:13.5px;border-radius:10px;}
+
+/* Form */
+.field{margin-bottom:14px;}
+.field label{display:block;font-size:13px;font-weight:600;color:var(--muted);margin-bottom:6px;}
+.field input,.field select,.field textarea{width:100%;padding:13px 14px;border-radius:12px;
+  border:1px solid var(--border);font-size:15px;background:#fff;font-family:inherit;}
+.upload{border:2px dashed var(--border);border-radius:16px;padding:26px;text-align:center;
+  color:var(--muted);font-size:13px;margin-bottom:16px;background:#fff;}
+
+/* Detail overlay */
+#detail{position:absolute;inset:0;background:var(--bg);z-index:20;transform:translateX(100%);
+  transition:transform .25s ease;display:flex;flex-direction:column;}
+#detail.open{transform:translateX(0);}
+.detail-hero{height:230px;background:linear-gradient(135deg,#fdba74,#f97316);display:flex;
+  align-items:center;justify-content:center;font-size:60px;position:relative;flex-shrink:0;}
+.back-btn{position:absolute;top:calc(16px + env(safe-area-inset-top,0px));left:16px;background:#fff;
+  border:none;border-radius:50%;width:38px;height:38px;font-size:18px;cursor:pointer;}
+.detail-body{padding:20px;overflow-y:auto;flex:1;}
+.detail-body h2{margin:0 0 6px;font-size:20px;}
+.detail-body .price{color:var(--orange-dark);font-weight:800;font-size:22px;margin-bottom:14px;}
+.detail-body p{color:#555;line-height:1.5;font-size:14.5px;}
+.detail-footer{padding:14px 20px;border-top:1px solid var(--border);background:#fff;}
+
+/* Subpage overlay (Profil / Mes annonces / Messagerie / Espace pro) */
+#subpage{position:absolute;inset:0;background:var(--bg);z-index:25;transform:translateX(100%);
+  transition:transform .25s ease;display:flex;flex-direction:column;}
+#subpage.open{transform:translateX(0);}
+.subpage-bar{display:flex;align-items:center;gap:12px;padding:calc(14px + env(safe-area-inset-top,0px)) 16px 14px;
+  background:#fff;border-bottom:1px solid var(--border);flex-shrink:0;position:sticky;top:0;z-index:2;}
+.subpage-bar button{background:var(--bg);border:none;border-radius:50%;width:34px;height:34px;
+  font-size:17px;cursor:pointer;flex-shrink:0;}
+.subpage-bar .t{font-weight:700;font-size:16.5px;}
+.subpage-body{flex:1;overflow-y:auto;padding:16px 16px 40px;}
+.subpage-loading{text-align:center;color:var(--muted);font-size:13px;padding:30px 0;}
+
+/* Ad edit thumb row */
+.img-thumb-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;}
+.img-thumb{position:relative;width:70px;height:70px;border-radius:12px;overflow:hidden;border:1px solid var(--border);}
+.img-thumb img{width:100%;height:100%;object-fit:cover;}
+.img-thumb .rm{position:absolute;top:2px;right:2px;background:rgba(0,0,0,.55);color:#fff;border:none;
+  border-radius:50%;width:20px;height:20px;font-size:11px;cursor:pointer;line-height:1;}
+
+/* Conversation rows */
+.conv-row{display:flex;gap:12px;background:#fff;border-radius:16px;border:1px solid var(--border);
+  padding:10px;margin-bottom:10px;cursor:pointer;align-items:center;}
+.conv-thumb{width:52px;height:52px;border-radius:12px;background:var(--orange);flex-shrink:0;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px;}
+.conv-thumb img{width:100%;height:100%;object-fit:cover;}
+.conv-info{flex:1;min-width:0;}
+.conv-title{font-weight:700;font-size:14px;display:flex;align-items:center;gap:6px;}
+.conv-badge{background:var(--orange);color:#fff;font-size:10.5px;font-weight:800;border-radius:999px;
+  padding:2px 7px;flex-shrink:0;}
+.conv-date{color:var(--muted);font-size:12px;margin-top:2px;}
+
+/* Chat */
+#chatWrap{display:flex;flex-direction:column;height:100%;}
+#chatOwner{background:#fff;border-radius:16px;border:1px solid var(--border);padding:14px;margin-bottom:14px;font-size:13px;color:#444;}
+#chatOwner .stars{color:#f5a623;font-size:15px;margin:4px 0;}
+#chatMessages{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding:4px 0 12px;}
+.msg{max-width:78%;padding:10px 13px;border-radius:16px;font-size:14px;line-height:1.4;}
+.msg.received{align-self:flex-start;background:#fff;border:1px solid var(--border);border-bottom-left-radius:4px;}
+.msg.sent{align-self:flex-end;background:var(--orange);color:#fff;border-bottom-right-radius:4px;}
+.msg .mt{font-size:10.5px;opacity:.7;margin-top:4px;display:block;}
+#chatForm{display:flex;gap:8px;padding-top:10px;flex-shrink:0;}
+#chatForm textarea{flex:1;border:1px solid var(--border);border-radius:14px;padding:11px 14px;font-size:14px;
+  resize:none;max-height:90px;font-family:inherit;}
+#chatForm button{background:var(--orange);color:#fff;border:none;border-radius:50%;width:44px;height:44px;
+  font-size:16px;flex-shrink:0;cursor:pointer;}
+
+/* Profile */
+.avatar{width:70px;height:70px;border-radius:50%;background:var(--orange);color:#fff;
+  display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:700;margin:10px auto 6px;}
+.profile-name{text-align:center;font-weight:700;font-size:17px;}
+.profile-sub{text-align:center;color:var(--muted);font-size:13px;margin-bottom:20px;}
+.menu-row{display:flex;align-items:center;justify-content:space-between;background:#fff;
+  padding:15px 16px;border-radius:14px;margin-bottom:10px;border:1px solid var(--border);cursor:pointer;}
+.menu-row span.l{display:flex;align-items:center;gap:12px;font-size:14.5px;font-weight:600;}
+
+/* Bottom nav */
+nav{position:absolute;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--border);
+  display:flex;padding:8px 4px calc(8px + env(safe-area-inset-bottom,0px));z-index:10;}
+nav button{flex:1;background:none;border:none;display:flex;flex-direction:column;align-items:center;
+  gap:3px;padding:6px 0;color:var(--muted);font-size:10.5px;font-weight:600;cursor:pointer;}
+nav button .ic{font-size:20px;}
+nav button.active{color:var(--orange-dark);}
+#detail .back-btn{z-index:3;box-shadow:0 2px 8px rgba(0,0,0,.2);}
+.detail-scroll{flex:1;overflow-y:auto;}
+.gallery{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;height:240px;
+  background:linear-gradient(135deg,#fdba74,#f97316);}
+.gallery>*{flex:0 0 100%;scroll-snap-align:center;display:flex;align-items:center;justify-content:center;font-size:60px;}
+.gallery img{width:100%;height:100%;object-fit:cover;}
+.dt-body{padding:18px 18px 24px;}
+.dt-body h2{margin:0 0 6px;font-size:20px;}
+.dt-price{color:var(--orange-dark);font-weight:800;font-size:22px;margin-bottom:10px;}
+.dt-meta{color:var(--muted);font-size:12.5px;margin-bottom:14px;}
+.dt-tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;}
+.dt-tag{background:#fff7ed;color:var(--orange-dark);border-radius:999px;padding:4px 10px;font-size:12px;font-weight:600;}
+.dt-h{font-size:14px;font-weight:700;margin:18px 0 8px;}
+.dt-desc{color:#555;line-height:1.5;font-size:14.5px;white-space:pre-line;}
+.dt-attr{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:13.5px;}
+.dt-attr span:first-child{color:var(--muted);}
+.dt-seller{background:#fff;border:1px solid var(--border);border-radius:16px;padding:14px;font-size:14px;}
+.dt-phone{display:block;margin-top:8px;color:var(--orange-dark);font-weight:800;font-size:16px;text-decoration:none;}
+.dt-gate{background:#fff7ed;border:1px solid #fed7aa;border-radius:14px;padding:14px;color:#7c2d12;font-size:13.5px;}
+.dt-sim{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;}
+.dt-sim .s{flex:0 0 130px;background:#fff;border:1px solid var(--border);border-radius:14px;overflow:hidden;cursor:pointer;}
+.dt-sim .s .im{height:80px;background:var(--orange);display:flex;align-items:center;justify-content:center;color:#fff;font-size:24px;}
+.dt-sim .s img{width:100%;height:100%;object-fit:cover;}
+.dt-sim .s .tx{padding:7px 8px;font-size:12px;font-weight:600;}
+</style>
+</head>
+<body>
+<div id="phone">
+
+  <header>
+    <div class="logo"><span class="o">Ô</span><span class="z">Z</span><span class="a">A</span><span class="rest">nnonces</span></div>
+    <div class="greet" id="greetTxt">Bonjour 👋</div>
+    <div class="sub">Trouvez ce qu'il vous faut, en un instant</div>
+  </header>
+
+  <!-- ACCUEIL -->
+  <div class="screen active" id="s-accueil">
+    <div class="search"><span>🔍</span><input placeholder="Que recherchez-vous ?"></div>
+    <div class="cats" id="catsGrid"></div>
+    <div class="banner">
+      <b>Une seconde vie pour vos objets 🌿</b>
+      <span>Déposez votre première annonce en moins d'une minute.</span>
+    </div>
+    <h3 class="section">Près de chez vous</h3>
+    <div class="ad-list" id="homeList"></div>
+  </div>
+
+  <!-- ANNONCES -->
+  <div class="screen" id="s-annonces">
+    <div class="chips" id="chipsRow"></div>
+    <div class="ad-list" id="fullList"></div>
+  </div>
+
+  <!-- DÉPOSER -->
+  <div class="screen" id="s-deposer">
+    <div id="deposer-gate" style="display:none;">
+      <h3 class="section">Déposer une annonce</h3>
+      <p style="color:var(--muted);font-size:14px;margin-bottom:18px;">Vous devez être connecté pour déposer une annonce.</p>
+      <button class="btn" onclick="go('profil')">Se connecter</button>
+      <button class="btn ghost" style="margin-top:10px;" onclick="openRegister()">Créer un compte</button>
+    </div>
+    <div id="deposer-form"></div>
+  </div>
+
+  <!-- PROFIL -->
+  <div class="screen" id="s-profil">
+    <div id="profilContent">
+      <p style="text-align:center;color:var(--muted);font-size:13px;padding:20px 0;">Chargement du profil…</p>
+    </div>
+  </div>
+
+  <!-- DÉTAIL ANNONCE -->
+  <div id="detail">
+  <button class="back-btn" onclick="closeDetail()">←</button>
+  <div class="detail-scroll" id="detailScroll"></div>
+  <div class="detail-footer" id="detailFooter"></div>
+</div>
+
+  <!-- SOUS-PAGES NATIVES (Profil / Mes annonces / Messagerie / Espace pro) -->
+  <div id="subpage">
+    <div class="subpage-bar">
+      <button onclick="subpageBack()">←</button>
+      <span class="t" id="subpageTitle">Titre</span>
+    </div>
+    <div class="subpage-body" id="subpageBody"></div>
+  </div>
+
+  <nav>
+    <button class="active" data-s="accueil" onclick="go('accueil')"><span class="ic">🏠</span>Accueil</button>
+    <button data-s="annonces" onclick="go('annonces')"><span class="ic">🔎</span>Annonces</button>
+    <button data-s="deposer" onclick="go('deposer')"><span class="ic">➕</span>Déposer</button>
+    <button data-s="profil" onclick="go('profil')"><span class="ic">👤</span>Profil</button>
+  </nav>
+</div>
+
+<script>
+const API_BASE = 'https://www.ozannonces.ma';
+
+// Les cookies tiers étant bloqués par les WebView, on renvoie l'ID de session en en-tête
+const _origFetch = window.fetch.bind(window);
+window.fetch = function(url, opts){
+  opts = opts || {};
+  if(typeof url === 'string' && url.indexOf(API_BASE) === 0){
+    const sid = localStorage.getItem('oz_sid');
+    if(sid) opts = Object.assign({}, opts, { headers: Object.assign({}, opts.headers || {}, {'X-Session-Id': sid}) });
+  }
+  return _origFetch(url, opts);
+};
+
+// Icône + libellé lisible pour chaque catégorie (clé = slug renvoyé par l'API)
+const CAT_META = {
+  immobilier:          {icon:'🏠', label:'Immobilier',          color:'#f97316'},
+  auto_moto:           {icon:'🚗', label:'Véhicules',           color:'#ef4444'},
+  emploi_services:     {icon:'💼', label:'Emploi & Services',   color:'#0ea5e9'},
+  ozamarket:           {icon:'🛒', label:'OZAMarket',           color:'#8b5cf6'},
+  locations_vacances:  {icon:'🏖️', label:'Locations & Vacances',color:'#14b8a6'},
+  baby_sitting:        {icon:'👶', label:'Baby-Sitting',        color:'#ec4899'},
+  covoiturage:         {icon:'🚙', label:'Covoiturage',         color:'#3b82f6'},
+  dons:                {icon:'🎁', label:'Dons',                color:'#f59e0b'},
+  animaux:             {icon:'🐾', label:'Animaux',             color:'#22c55e'},
+};
+function metaFor(slug){ return CAT_META[slug] || {icon:'📦', label: slug || 'Autres', color:'#94a3b8'}; }
+
+let categories = [];
+let catsExpanded = false;
+let currentCategoryId = null;
+
+async function loadCategories(){
+  try{
+    const res = await fetch(API_BASE + '/api_categories.php');
+    const data = await res.json();
+    if(data.success) categories = data.categories;
+  }catch(e){ console.warn('Catégories indisponibles, hors-ligne ?', e); }
+  renderCats();
+  renderChips();
+  fillDeposerCategories();
+}
+
+function renderCats(){
+  const el = document.getElementById('catsGrid');
+  if(!categories.length){ el.innerHTML = '<p style="color:#999;font-size:13px;grid-column:1/-1">Chargement des catégories…</p>'; return; }
+  let list = categories;
+  let items;
+  if(!catsExpanded){
+    items = list.slice(0,3).map(c=>{
+      const m = metaFor(c.slug);
+      return `<div class="cat" onclick="filterByCategory(${c.id})"><div class="ico">${m.icon}</div><div class="lab">${m.label}</div></div>`;
+    });
+    items.push(`<div class="cat" onclick="catsExpanded=true;renderCats();"><div class="ico">⋯</div><div class="lab">Autres</div></div>`);
+  } else {
+    items = list.map(c=>{
+      const m = metaFor(c.slug);
+      return `<div class="cat" onclick="filterByCategory(${c.id})"><div class="ico">${m.icon}</div><div class="lab">${m.label}</div></div>`;
+    });
+  }
+  el.innerHTML = items.join('');
+}
+
+function renderChips(){
+  const el = document.getElementById('chipsRow');
+  const chips = [`<div class="chip ${currentCategoryId===null?'on':''}" onclick="filterByCategory(null)">Tout</div>`]
+    .concat(categories.map(c=>{
+      const m = metaFor(c.slug);
+      return `<div class="chip ${currentCategoryId===c.id?'on':''}" onclick="filterByCategory(${c.id})">${m.icon} ${m.label}</div>`;
+    }));
+  el.innerHTML = chips.join('');
+}
+
+function filterByCategory(categoryId){
+  currentCategoryId = categoryId;
+  go('annonces');
+  renderChips();
+  loadListings(categoryId, 'fullList');
+}
+
+let lastAds = []; // annonces actuellement affichées (pour ouvrir le détail par index)
+
+// État de pagination par liste ('homeList' ou 'fullList') : catégorie en cours,
+// page déjà chargée, nombre total d'annonces côté serveur, et les annonces
+// cumulées jusqu'ici (nécessaire pour que "Voir plus" ajoute à la suite au
+// lieu de tout recharger depuis le début).
+const listState = {};
+
+async function loadListings(categoryId, targetId){
+  const el = document.getElementById(targetId);
+  el.innerHTML = '<p style="color:#999;font-size:13px;text-align:center;padding:20px">Chargement des annonces…</p>';
+  listState[targetId] = { categoryId, page: 1, total: 0, items: [] };
+  try{
+    let url = API_BASE + '/api_listings.php?page=1';
+    if(categoryId) url += '&category_id=' + categoryId;
+    const res = await fetch(url);
+    const data = await res.json();
+    if(!data.success) throw new Error('Réponse invalide');
+    const st = listState[targetId];
+    st.items = data.listings;
+    st.total = data.total || data.listings.length;
+    lastAds = st.items;
+    if(lastAds[0]) console.debug('Exemple image annonce :', lastAds[0].image);
+    renderList(targetId, st.items, st.total);
+  }catch(e){
+    console.warn('Annonces indisponibles', e);
+    el.innerHTML = '<p style="color:#999;font-size:13px;text-align:center;padding:20px">Impossible de charger les annonces pour le moment.</p>';
+  }
+}
+
+async function loadMoreListings(targetId){
+  const st = listState[targetId];
+  if(!st) return;
+  const btn = document.getElementById('more-' + targetId);
+  if(btn){ btn.disabled = true; btn.textContent = 'Chargement…'; }
+  try{
+    let url = API_BASE + '/api_listings.php?page=' + (st.page + 1);
+    if(st.categoryId) url += '&category_id=' + st.categoryId;
+    const res = await fetch(url);
+    const data = await res.json();
+    if(!data.success) throw new Error('Réponse invalide');
+    st.page += 1;
+    st.items = st.items.concat(data.listings);
+    st.total = data.total || st.total;
+    lastAds = st.items;
+    renderList(targetId, st.items, st.total);
+  }catch(e){
+    console.warn('Chargement de la suite impossible', e);
+    if(btn){ btn.disabled = false; btn.textContent = 'Réessayer'; }
+  }
+}
+
+function renderList(targetId, list, total){
+  const el = document.getElementById(targetId);
+  if(!list.length){
+    el.innerHTML = '<p style="color:#999;font-size:13px;text-align:center;padding:20px">Aucune annonce pour l\'instant.</p>';
+    return;
+  }
+  const cards = list.map((a,i)=>{
+    const m = metaFor(a.category_slug);
+    const priceTxt = (a.price === null || a.price === 0) ? 'Prix non précisé' : (Math.round(a.price) + ' ' + (a.currency||'€'));
+    const thumbInner = a.image
+      ? `<img src="${a.image}" alt="" onerror="this.outerHTML='<span>${m.icon}</span>'">`
+      : `<span>${m.icon}</span>`;
+    return `
+    <div class="ad-card" onclick="openDetail(${i})">
+      <div class="ad-thumb" style="background:${m.color}">
+        ${thumbInner}
+      </div>
+      <div class="ad-info">
+        <div class="ad-title">${escapeHtml(a.title)}</div>
+        <div class="ad-price">${priceTxt}</div>
+        <div class="ad-loc">📍 ${escapeHtml(a.city || 'Localisation non précisée')}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  const hasMore = typeof total === 'number' && list.length < total;
+  const moreBtn = hasMore
+    ? `<button id="more-${targetId}" class="btn ghost" style="margin-top:14px;" onclick="loadMoreListings('${targetId}')">Voir plus d'annonces</button>`
+    : '';
+
+  el.innerHTML = cards + moreBtn;
+}
+
+/* ---------------- ÉTAT DE CONNEXION GLOBAL ---------------- */
+// Vérifié une fois au démarrage et remis à jour après connexion/déconnexion,
+// pour verrouiller "Déposer" et "Contacter le vendeur" côté app sans
+// attendre que l'utilisateur ouvre l'onglet Profil.
+let currentUser = null;
+async function checkAuth(){
+  try{
+    const res = await fetch(API_BASE + '/api_me.php', { credentials: 'include' });
+    const data = await res.json();
+    currentUser = (data.success && data.logged_in) ? data.user : null;
+  }catch(e){ currentUser = null; }
+  updateDeposerGate();
+}
+function updateDeposerGate(){
+  const gate = document.getElementById('deposer-gate');
+  const form = document.getElementById('deposer-form');
+  if(!gate || !form) return;
+  if(currentUser){
+    gate.style.display = 'none'; form.style.display = 'block';
+    if(!document.getElementById('dTitle') && !document.getElementById('dSuccess')) renderDeposerForm();
+  } else {
+    gate.style.display = 'block'; form.style.display = 'none';
+  }
+}
+
+function go(name){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('s-'+name).classList.add('active');
+  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active', b.dataset.s===name));
+  if(name==='profil') loadProfil();
+  if(name==='deposer') updateDeposerGate();
+}
+
+/* ---------- FICHE DÉTAIL (api_details.php) ---------- */
+let currentDetail = null;
+let pendingDetailId = null;
+const fmtPrice = a => (a.price === null || a.price === 0) ? 'Prix non précisé' : (Math.round(a.price) + ' ' + (a.currency || '€'));
+const imgOrIcon = (src, icon) => src
+  ? `<img src="${escapeHtml(src)}" alt="" onerror="this.outerHTML='<span>${icon}</span>'">` : `<span>${icon}</span>`;
+
+function openDetail(i){ const a = lastAds[i]; if(a) openDetailById(a.id, a); }
+
+async function openDetailById(id, preview){
+  currentDetail = null;
+  const m = metaFor(preview && preview.category_slug);
+  document.getElementById('detailScroll').innerHTML =
+    `<div class="gallery">${preview ? `<div>${imgOrIcon(preview.image, m.icon)}</div>` : ''}</div>
+     <div class="dt-body">${preview ? `<h2>${escapeHtml(preview.title)}</h2><div class="dt-price">${fmtPrice(preview)}</div>` : ''}
+     <p class="subpage-loading">Chargement…</p></div>`;
+  document.getElementById('detailFooter').innerHTML = '';
+  document.getElementById('detail').classList.add('open');
+  document.getElementById('detailScroll').scrollTop = 0;
+  try{
+    const data = await apiFetch('/api_details.php?id=' + id);
+    if(!data.success) throw new Error(data.error || 'Erreur');
+    currentUser = data.logged_in ? (currentUser || {}) : null; // garde l'état de connexion synchronisé
+    currentDetail = data;
+    renderDetail(data);
+  }catch(e){
+    document.querySelector('#detailScroll .dt-body').innerHTML =
+      `<p class="subpage-loading">${escapeHtml(e.message || 'Erreur réseau.')}</p>`;
+  }
+}
+
+function renderDetail(d){
+  const a = d.annonce, m = metaFor(a.category_slug);
+  const gallery = a.images.length
+    ? a.images.map(im => `<div>${imgOrIcon(im.url, m.icon)}</div>`).join('')
+    : `<div>${m.icon}</div>`;
+  const date = new Date((a.created_at || '').replace(' ', 'T')).toLocaleDateString('fr-FR');
+  const tags = [a.category_name, a.subcategory_name, a.condition, a.property_type, a.transaction,
+    a.seller_type === 'professionnel' ? 'Professionnel' : (a.seller_type ? 'Particulier' : null)]
+    .filter(Boolean).map(t => `<span class="dt-tag">${escapeHtml(t)}</span>`).join('');
+  const attrs = a.attributes.length
+    ? `<div class="dt-h">Caractéristiques</div>` +
+      a.attributes.map(x => `<div class="dt-attr"><span>${escapeHtml(x.name)}</span><span>${escapeHtml(x.value)}</span></div>`).join('') : '';
+
+  // Vendeur : le téléphone n'est présent dans la réponse que si connecté
+  let seller = `<div class="dt-h">Vendeur</div><div class="dt-seller"><b>${escapeHtml(d.seller.name || 'Vendeur')}</b>
+    <div style="color:var(--muted);font-size:12.5px;">📍 ${escapeHtml(d.seller.city || a.city || '')}</div>`;
+  if(d.contact){
+    seller += d.contact.telephone
+      ? `<a class="dt-phone" href="tel:${escapeHtml(d.contact.telephone)}">📞 ${escapeHtml(d.contact.telephone)}</a>`
+      : `<div style="color:var(--muted);font-size:13px;margin-top:8px;">Téléphone non renseigné</div>`;
+  } else {
+    seller += `<div class="dt-gate" style="margin-top:10px;">🔒 Connectez-vous pour voir le numéro et contacter le vendeur.</div>`;
+  }
+  seller += `</div>`;
+
+  const sim = d.similar.length ? `<div class="dt-h">Annonces similaires</div><div class="dt-sim">` +
+    d.similar.map(s => `<div class="s" onclick="openDetailById(${s.id})">
+      <div class="im">${imgOrIcon(s.image, m.icon)}</div>
+      <div class="tx">${escapeHtml(s.title)}<div style="color:var(--orange-dark);font-weight:800;">${fmtPrice(s)}</div></div></div>`).join('') + `</div>` : '';
+
+  document.getElementById('detailScroll').innerHTML = `
+    <div class="gallery">${gallery}</div>
+    <div class="dt-body">
+      <h2>${escapeHtml(a.title)}</h2>
+      <div class="dt-price">${fmtPrice(a)}</div>
+      <div class="dt-meta">📍 ${escapeHtml(a.city || 'Localisation non précisée')} · ${date} · 👁 ${a.views} vues · Réf. #${a.id}</div>
+      <div class="dt-tags">${tags}</div>
+      <div class="dt-h">Description</div>
+      <div class="dt-desc">${escapeHtml(a.description || 'Aucune description disponible')}</div>
+      ${attrs}${seller}${sim}
+    </div>`;
+
+  const f = document.getElementById('detailFooter');
+  if(d.is_owner){
+    f.innerHTML = `<button class="btn ghost" onclick="closeDetail();openAdEdit(${a.id})">Modifier mon annonce</button>`;
+  } else if(d.logged_in && d.contact){
+    f.innerHTML = `<button class="btn" onclick="contactSeller()">💬 Envoyer un message</button>`;
+  } else {
+    f.innerHTML = `<button class="btn" onclick="pendingDetailId=${a.id};closeDetail();go('profil')">Se connecter pour contacter</button>
+  <button class="btn ghost small" style="margin-top:8px;" onclick="openRegister()">Créer un compte</button>`;
+  }
+}
+
+function closeDetail(){ document.getElementById('detail').classList.remove('open'); }
+
+function contactSeller(){
+  const d = currentDetail;
+  if(!d || !d.logged_in || !d.contact) return;
+  openChat(d.annonce.id, d.contact.owner_id, /*standalone=*/true);
+}
+
+/* ================================================================
+   SOUS-PAGES NATIVES : Profil / Mes annonces / Messagerie / Espace pro
+   ================================================================ */
+let subpageMode = null; // 'profile' | 'ads-list' | 'ads-edit' | 'msg-list' | 'msg-chat' | 'pro'
+
+function openSubpage(title, mode){
+  document.getElementById('subpageTitle').textContent = title;
+  document.getElementById('subpageBody').innerHTML = '<p class="subpage-loading">Chargement…</p>';
+  subpageMode = mode;
+  document.getElementById('subpage').classList.add('open');
+}
+function closeSubpage(){
+  document.getElementById('subpage').classList.remove('open');
+  subpageMode = null;
+}
+// Le bouton retour revient à la liste quand on est dans un sous-écran (édition annonce / chat),
+// sinon il ferme complètement la sous-page.
+function subpageBack(){
+  if(subpageMode === 'ads-edit'){ openMesAnnonces(); }
+  else if(subpageMode === 'msg-chat'){ openMessagerie(); }
+  else { closeSubpage(); } // couvre aussi 'msg-chat-standalone' (retour vers la fiche annonce)
+}
+
+async function apiFetch(path, opts){
+  opts = opts || {};
+  opts.credentials = 'include';
+  opts.headers = Object.assign({'Content-Type':'application/json'}, opts.headers||{});
+  const res = await fetch(API_BASE + path, opts);
+  return res.json();
+}
+
+/* ---------- MON PROFIL ---------- */
+async function openProfileEdit(){
+  openSubpage('Mon Profil', 'profile');
+  try{
+    const data = await apiFetch('/api_profile.php');
+    if(!data.success || !data.logged_in){
+      document.getElementById('subpageBody').innerHTML = '<p class="subpage-loading">Impossible de charger le profil.</p>';
+      return;
+    }
+    const u = data.user;
+    document.getElementById('subpageBody').innerHTML = `
+      <div class="field"><label>Nom</label><input value="${escapeHtml(u.nom)}" disabled></div>
+      <div class="field"><label>Email</label><input id="pEmail" type="email" value="${escapeHtml(u.email)}"></div>
+      <div class="field"><label>Téléphone</label><input id="pTel" type="tel" value="${escapeHtml(u.telephone)}"></div>
+      <div class="field"><label>Nouveau mot de passe</label><input id="pPass" type="password" placeholder="Laisser vide pour ne pas changer"></div>
+      <div id="pMsg" style="color:#dc2626;font-size:13px;margin-bottom:10px;"></div>
+      <button class="btn" onclick="submitProfileUpdate()">Enregistrer</button>
+    `;
+  }catch(e){
+    document.getElementById('subpageBody').innerHTML = '<p class="subpage-loading">Erreur réseau.</p>';
+  }
+}
+async function submitProfileUpdate(){
+  const email = document.getElementById('pEmail').value.trim();
+  const telephone = document.getElementById('pTel').value.trim();
+  const password = document.getElementById('pPass').value.trim();
+  const msgEl = document.getElementById('pMsg');
+  msgEl.textContent = '';
+  try{
+    const data = await apiFetch('/api_profile_update.php', {method:'POST', body: JSON.stringify({email, telephone, password})});
+    if(data.success){ msgEl.style.color = '#16a34a'; msgEl.textContent = 'Profil mis à jour.'; }
+    else { msgEl.style.color = '#dc2626'; msgEl.textContent = data.error || 'Erreur.'; }
+  }catch(e){ msgEl.style.color = '#dc2626'; msgEl.textContent = 'Erreur réseau.'; }
+}
+
+/* ---------- MES ANNONCES ---------- */
+let myAdsCache = [];
+async function openMesAnnonces(){
+  openSubpage('Mes annonces', 'ads-list');
+  try{
+    const data = await apiFetch('/api_my_ads.php');
+    if(!data.success){ document.getElementById('subpageBody').innerHTML = '<p class="subpage-loading">Erreur de chargement.</p>'; return; }
+    myAdsCache = data.ads;
+    if(!myAdsCache.length){
+      document.getElementById('subpageBody').innerHTML = '<p class="subpage-loading">Vous n\'avez pas encore d\'annonce.</p>';
+      return;
+    }
+    document.getElementById('subpageBody').innerHTML = myAdsCache.map((a,i)=>{
+      const m = metaFor(a.category_slug);
+      const priceTxt = a.price ? Math.round(a.price)+' '+(a.currency||'€') : 'Prix non précisé';
+      const thumb = a.image ? `<img src="${a.image}" onerror="this.outerHTML='<span>${m.icon}</span>'">` : `<span>${m.icon}</span>`;
+      return `<div class="ad-card" onclick="openAdEdit(${a.id})">
+        <div class="ad-thumb" style="background:${m.color}">${thumb}</div>
+        <div class="ad-info">
+          <div class="ad-title">${escapeHtml(a.title)}</div>
+          <div class="ad-price">${priceTxt}</div>
+          <div class="ad-loc">${escapeHtml(a.category_name || 'Non catégorisé')}</div>
+        </div>
+      </div>`;
+    }).join('');
+  }catch(e){
+    document.getElementById('subpageBody').innerHTML = '<p class="subpage-loading">Erreur réseau.</p>';
+  }
+}
+
+let currentAdImages = [];
+let currentAdImagesToDelete = [];
+
+async function openAdEdit(id){
+  openSubpage('Modifier l\'annonce', 'ads-edit');
+  try{
+    const data = await apiFetch('/api_ad_detail.php?id=' + id);
+    if(!data.success){ document.getElementById('subpageBody').innerHTML = '<p class="subpage-loading">'+(data.error||'Erreur')+'</p>'; return; }
+    const a = data.annonce;
+    currentAdImages = a.images || [];
+    currentAdImagesToDelete = [];
+    document.getElementById('subpageBody').innerHTML = `
+      <div id="adImgRow" class="img-thumb-row"></div>
+      <div class="field"><label>Titre</label><input id="adTitle" value="${escapeHtml(a.title)}"></div>
+      <div class="field"><label>Description</label><textarea id="adDesc" rows="3">${escapeHtml(a.description)}</textarea></div>
+      <div class="field"><label>Prix (€)</label><input id="adPrice" type="number" value="${escapeHtml(a.price)}"></div>
+      <div class="field"><label>Téléphone</label><input id="adTel" value="${escapeHtml(a.telephone)}"></div>
+      <div class="field"><label>Ville</label><input id="adCity" value="${escapeHtml(a.city)}"></div>
+      <div id="adMsg" style="color:#dc2626;font-size:13px;margin-bottom:10px;"></div>
+      <button class="btn" onclick="submitAdUpdate(${a.id})">Enregistrer</button>
+      <button class="btn danger" style="margin-top:10px;" onclick="confirmDeleteAd(${a.id})">Supprimer l'annonce</button>
+      <button class="btn ghost" style="margin-top:10px;" onclick="openBoostExternal(${a.id})">🚀 Booster cette annonce</button>
+    `;
+    renderAdImgRow();
+  }catch(e){
+    document.getElementById('subpageBody').innerHTML = '<p class="subpage-loading">Erreur réseau.</p>';
+  }
+}
+function renderAdImgRow(){
+  const el = document.getElementById('adImgRow');
+  if(!el) return;
+  el.innerHTML = currentAdImages.map(img => `
+    <div class="img-thumb" data-id="${img.id}">
+      <img src="${img.url}">
+      <button class="rm" onclick="removeAdImage(${img.id})">✕</button>
+    </div>`).join('');
+}
+function removeAdImage(imgId){
+  currentAdImagesToDelete.push(imgId);
+  currentAdImages = currentAdImages.filter(i => i.id !== imgId);
+  renderAdImgRow();
+}
+async function submitAdUpdate(id){
+  const msgEl = document.getElementById('adMsg');
+  msgEl.textContent = '';
+  const payload = {
+    id: id,
+    title: document.getElementById('adTitle').value.trim(),
+    description: document.getElementById('adDesc').value.trim(),
+    price: document.getElementById('adPrice').value,
+    telephone: document.getElementById('adTel').value.trim(),
+    city: document.getElementById('adCity').value.trim(),
+    images_to_delete: currentAdImagesToDelete.join(','),
+  };
+  try{
+    const data = await apiFetch('/api_ad_update.php', {method:'POST', body: JSON.stringify(payload)});
+    if(data.success){ msgEl.style.color = '#16a34a'; msgEl.textContent = 'Annonce mise à jour.'; }
+    else { msgEl.style.color = '#dc2626'; msgEl.textContent = data.error || 'Erreur.'; }
+  }catch(e){ msgEl.style.color = '#dc2626'; msgEl.textContent = 'Erreur réseau.'; }
+}
+function confirmDeleteAd(id){
+  if(!confirm('Supprimer définitivement cette annonce ?')) return;
+  deleteAd(id);
+}
+async function deleteAd(id){
+  try{
+    const data = await apiFetch('/api_ad_delete.php', {method:'POST', body: JSON.stringify({id})});
+    if(data.success){ openMesAnnonces(); } else { alert(data.error || 'Erreur lors de la suppression.'); }
+  }catch(e){ alert('Erreur réseau.'); }
+}
+function openBoostExternal(id){
+  window.open(API_BASE + '/payment_gateway.php?annonce_id=' + id + '&source=app', '_system');
+}
+
+/* ---------- MA MESSAGERIE ---------- */
+let currentChat = { annonceId:null, otherUserId:null, conversationId:null };
+
+async function openMessagerie(){
+  openSubpage('Ma Messagerie', 'msg-list');
+  try{
+    const data = await apiFetch('/api_conversations.php');
+    if(!data.success){ document.getElementById('subpageBody').innerHTML = '<p class="subpage-loading">Erreur de chargement.</p>'; return; }
+    if(!data.conversations.length){
+      document.getElementById('subpageBody').innerHTML = '<p class="subpage-loading">Aucune conversation pour le moment.</p>';
+      return;
+    }
+    document.getElementById('subpageBody').innerHTML = data.conversations.map(c => {
+      const thumb = c.image ? `<img src="${c.image}">` : '💬';
+      const badge = c.unread_count > 0 ? `<span class="conv-badge">${c.unread_count}</span>` : '';
+      const date = new Date(c.updated_at).toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit'});
+      return `<div class="conv-row" onclick="openChat(${c.annonce_id}, ${c.other_user_id})">
+        <div class="conv-thumb">${thumb}</div>
+        <div class="conv-info">
+          <div class="conv-title">${escapeHtml(c.title)} ${badge}</div>
+          <div class="conv-date">${date}</div>
+        </div>
+      </div>`;
+    }).join('');
+  }catch(e){
+    document.getElementById('subpageBody').innerHTML = '<p class="subpage-loading">Erreur réseau.</p>';
+  }
+}
+
+async function openChat(annonceId, otherUserId, standalone){
+  openSubpage('Conversation', standalone ? 'msg-chat-standalone' : 'msg-chat');
+  currentChat = { annonceId, otherUserId, conversationId:null };
+  try{
+    const url = '/api_conversation_messages.php?annonce_id=' + annonceId + (otherUserId ? '&to=' + otherUserId : '');
+    const data = await apiFetch(url);
+    if(!data.success){ document.getElementById('subpageBody').innerHTML = '<p class="subpage-loading">'+(data.error||'Erreur')+'</p>'; return; }
+    document.getElementById('subpageTitle').textContent = data.annonce_title || 'Conversation';
+    currentChat.conversationId = data.conversation_id;
+    currentChat.otherUserId = data.other_user_id;
+
+    let ownerHtml = '';
+    if(data.other_user){
+      const ou = data.other_user;
+      let stars = '';
+      const rounded = ou.moyenne_note ? Math.round(ou.moyenne_note) : 0;
+      for(let i=1;i<=5;i++) stars += `<span onclick="rateOwner(${ou.id},${i})" style="cursor:pointer">${i<=rounded?'★':'☆'}</span>`;
+      ownerHtml = `<div id="chatOwner">
+        <b>${escapeHtml(ou.nom)} ${escapeHtml(ou.prenom)}</b><br>
+        📍 ${escapeHtml(ou.city||'Ville non renseignée')} · Membre depuis ${ou.membre_depuis}<br>
+        ${ou.total_annonces} annonce(s) active(s)
+        <div class="stars" id="starsRow">${stars}</div>
+        <span style="font-size:12px;color:var(--muted);">${ou.moyenne_note ? ou.moyenne_note+'/5 ('+ou.nb_notes+' avis)' : 'Pas encore noté'}</span>
+      </div>`;
+    }
+    const msgsHtml = data.messages.map(m => `
+      <div class="msg ${m.type}">${escapeHtml(m.text)}<span class="mt">${new Date(m.time).toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}</span></div>
+    `).join('') || '<p class="subpage-loading">Pas encore de messages.</p>';
+
+    document.getElementById('subpageBody').innerHTML = `
+      <div id="chatWrap">
+        ${ownerHtml}
+        <div id="chatMessages">${msgsHtml}</div>
+        <form id="chatForm" onsubmit="return false;">
+          <textarea id="chatInput" placeholder="Écrivez votre message…" ${!data.other_user_id ? 'disabled' : ''}></textarea>
+          <button onclick="submitChatMessage()" ${!data.other_user_id ? 'disabled' : ''}>➤</button>
+        </form>
+      </div>
+    `;
+    const msgsEl = document.getElementById('chatMessages');
+    if(msgsEl) msgsEl.scrollTop = msgsEl.scrollHeight;
+  }catch(e){
+    document.getElementById('subpageBody').innerHTML = '<p class="subpage-loading">Erreur réseau.</p>';
+  }
+}
+function escapeHtml(s){
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+async function submitChatMessage(){
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if(!text || !currentChat.otherUserId) return;
+  try{
+    const data = await apiFetch('/api_send_message.php', {method:'POST', body: JSON.stringify({
+      annonce_id: currentChat.annonceId,
+      recipient_id: currentChat.otherUserId,
+      conversation_id: currentChat.conversationId || 0,
+      message: text,
+    })});
+    if(data.success){
+      input.value = '';
+      currentChat.conversationId = data.conversation_id;
+      openChat(currentChat.annonceId, currentChat.otherUserId);
+    } else {
+      alert(data.error || "Erreur d'envoi.");
+    }
+  }catch(e){ alert('Erreur réseau.'); }
+}
+async function rateOwner(userId, note){
+  try{
+    const data = await apiFetch('/api_rate_user.php', {method:'POST', body: JSON.stringify({user_id:userId, note})});
+    if(data.success){
+      openChat(currentChat.annonceId, currentChat.otherUserId);
+    } else { alert(data.error || 'Erreur.'); }
+  }catch(e){ alert('Erreur réseau.'); }
+}
+
+/* ---------- MON ESPACE PRO ---------- */
+async function openEspacePro(){
+  openSubpage('Mon espace pro', 'pro');
+  try{
+    const data = await apiFetch('/api_espace_pro.php');
+    if(!data.success){ document.getElementById('subpageBody').innerHTML = '<p class="subpage-loading">Erreur de chargement.</p>'; return; }
+    if(!data.has_vitrine){
+      document.getElementById('subpageBody').innerHTML = `
+        <p class="subpage-loading">Vous n'avez pas encore de vitrine professionnelle.</p>
+        <button class="btn" onclick="openProDemande()">Créer ma vitrine</button>`;
+      return;
+    }
+    const v = data.vitrine;
+    const jours = ['lundi','mardi','mercredi','jeudi','vendredi','samedi','dimanche'];
+    document.getElementById('subpageBody').innerHTML = `
+      <div class="menu-row" style="cursor:default;">
+        <span class="l">📍 Statut</span><span>${v.statut_label}</span>
+      </div>
+      <div class="menu-row" style="cursor:default;">
+        <span class="l">💳 Formule</span><span>${v.plan_label}</span>
+      </div>
+      <div class="menu-row" style="cursor:default;">
+        <span class="l">📋 Annonces</span><span>${v.nb_annonces} / ${v.quota_annonces}</span>
+      </div>
+      <div class="field"><label>Nom de l'entreprise</label><input id="proNom" value="${escapeHtml(v.nom)}"></div>
+      <div class="field"><label>Secteur</label><input id="proSecteur" value="${escapeHtml(v.secteur)}"></div>
+      <div class="field"><label>Description</label><textarea id="proDesc" rows="3">${escapeHtml(v.description)}</textarea></div>
+      <div class="field"><label>Ville</label><input id="proVille" value="${escapeHtml(v.ville)}"></div>
+      <div class="field"><label>Code postal</label><input id="proCP" value="${escapeHtml(v.code_postal)}"></div>
+      <div class="field"><label>Adresse</label><input id="proAdresse" value="${escapeHtml(v.adresse)}"></div>
+      <div class="field"><label>Téléphone</label><input id="proTel" value="${escapeHtml(v.telephone)}"></div>
+      <div class="field"><label>E-mail public</label><input id="proEmail" value="${escapeHtml(v.email_public)}"></div>
+      <div class="field"><label>Site web</label><input id="proSite" value="${escapeHtml(v.site_web)}"></div>
+      <div class="field"><label>Facebook</label><input id="proFb" value="${escapeHtml(v.facebook)}"></div>
+      <div class="field"><label>Instagram</label><input id="proIg" value="${escapeHtml(v.instagram)}"></div>
+      <div class="field"><label>LinkedIn</label><input id="proLi" value="${escapeHtml(v.linkedin)}"></div>
+      <h3 class="section">Horaires</h3>
+      ${jours.map(j=>`<div class="field"><label style="text-transform:capitalize">${j}</label><input id="proH_${j}" value="${escapeHtml((v.horaires && v.horaires[j]) || '')}" placeholder="Ex : 9h00 – 18h00"></div>`).join('')}
+      <div id="proMsg" style="color:#dc2626;font-size:13px;margin:6px 0;"></div>
+      <button class="btn" onclick="submitEspacePro()">Enregistrer les modifications</button>
+      ${v.statut==='actif' ? `<button class="btn ghost" style="margin-top:10px;" onclick="window.open('${API_BASE}/entreprise.php?slug=${v.slug}','_system')">Voir ma vitrine</button>` : ''}
+    `;
+  }catch(e){
+    document.getElementById('subpageBody').innerHTML = '<p class="subpage-loading">Erreur réseau.</p>';
+  }
+}
+async function submitEspacePro(){
+  const jours = ['lundi','mardi','mercredi','jeudi','vendredi','samedi','dimanche'];
+  const horaires = {};
+  jours.forEach(j => horaires[j] = document.getElementById('proH_'+j).value.trim());
+  const payload = {
+    nom: document.getElementById('proNom').value.trim(),
+    secteur: document.getElementById('proSecteur').value.trim(),
+    description: document.getElementById('proDesc').value.trim(),
+    ville: document.getElementById('proVille').value.trim(),
+    code_postal: document.getElementById('proCP').value.trim(),
+    adresse: document.getElementById('proAdresse').value.trim(),
+    telephone: document.getElementById('proTel').value.trim(),
+    email_public: document.getElementById('proEmail').value.trim(),
+    site_web: document.getElementById('proSite').value.trim(),
+    facebook: document.getElementById('proFb').value.trim(),
+    instagram: document.getElementById('proIg').value.trim(),
+    linkedin: document.getElementById('proLi').value.trim(),
+    horaires: horaires,
+  };
+  const msgEl = document.getElementById('proMsg');
+  msgEl.textContent = '';
+  try{
+    const data = await apiFetch('/api_espace_pro_update.php', {method:'POST', body: JSON.stringify(payload)});
+    if(data.success){ msgEl.style.color = '#16a34a'; msgEl.textContent = 'Vitrine mise à jour.'; }
+    else { msgEl.style.color = '#dc2626'; msgEl.textContent = data.error || 'Erreur.'; }
+  }catch(e){ msgEl.style.color = '#dc2626'; msgEl.textContent = 'Erreur réseau.'; }
+}
+
+/* ---------- DÉPOSER UNE ANNONCE ---------- */
+let dPhotos = []; // { blob, url }
+const D_MAX_PHOTOS = 8;
+
+function resetDeposer(){
+  dPhotos.forEach(p => URL.revokeObjectURL(p.url));
+  dPhotos = [];
+  const f = document.getElementById('deposer-form');
+  if(f) f.innerHTML = '';
+}
+
+function renderDeposerForm(){
+  const f = document.getElementById('deposer-form');
+  if(!f) return;
+  dPhotos.forEach(p => URL.revokeObjectURL(p.url));
+  dPhotos = [];
+  f.innerHTML = `
+    <h3 class="section">Déposer une annonce</h3>
+    <datalist id="dCityList"></datalist>
+    <input type="file" id="dPhotoInput" accept="image/*" multiple style="display:none">
+    <div class="upload" onclick="document.getElementById('dPhotoInput').click()">📷<br>Ajouter des photos (${D_MAX_PHOTOS} max)<br><small>La première sera la photo principale</small></div>
+    <div id="dThumbs" class="img-thumb-row"></div>
+    <div class="field"><label>Titre *</label><input id="dTitle" maxlength="120" placeholder="Ex : Vélo électrique en très bon état"></div>
+    <div class="field"><label>Catégorie *</label><select id="dCat"></select></div>
+    <div class="field"><label>Prix (€)</label><input id="dPrice" type="number" inputmode="decimal" min="0" step="0.01" placeholder="Laisser vide si non précisé"></div>
+    <div class="field"><label>Description</label><textarea id="dDesc" rows="4" placeholder="Décrivez votre bien : état, caractéristiques…"></textarea></div>
+    <div class="field"><label>Ville *</label><input id="dCity" list="dCityList" autocomplete="off" placeholder="Tapez une ville"></div>
+    <div class="field"><label>Téléphone (10 chiffres)</label><input id="dTel" type="tel" inputmode="numeric" maxlength="10" placeholder="0612345678"></div>
+    <div id="dMsg" style="color:#dc2626;font-size:13px;margin-bottom:10px;"></div>
+    <button class="btn" id="dBtn" onclick="submitAd()">Publier l'annonce</button>
+  `;
+  document.getElementById('dPhotoInput').addEventListener('change', onPhotosPicked);
+  document.getElementById('dTel').addEventListener('input', function(){ this.value = this.value.replace(/\D/g,''); });
+  bindCityAutocomplete('dCity', 'dCityList');
+  fillDeposerCategories();
+  // Préremplit le téléphone depuis le profil
+  apiFetch('/api_profile.php').then(d => {
+    const t = document.getElementById('dTel');
+    if(d && d.user && d.user.telephone && t && !t.value) t.value = d.user.telephone;
+  }).catch(()=>{});
+}
+
+// Toutes les catégories renvoyées par l'API (plus de liste codée en dur)
+function fillDeposerCategories(){
+  const sel = document.getElementById('dCat');
+  if(!sel) return;
+  if(!categories.length){ sel.innerHTML = '<option value="">Chargement…</option>'; return; }
+  const prev = sel.value;
+  sel.innerHTML = '<option value="">Choisir…</option>' +
+    categories.map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('');
+  if(prev) sel.value = prev;
+}
+
+async function onPhotosPicked(e){
+  const files = Array.from(e.target.files || []);
+  e.target.value = '';
+  const msg = document.getElementById('dMsg');
+  msg.textContent = '';
+  for(const file of files){
+    if(dPhotos.length >= D_MAX_PHOTOS){ msg.textContent = `Maximum ${D_MAX_PHOTOS} photos.`; break; }
+    if(!file.type.startsWith('image/')) continue;
+    try{
+      const blob = await downscaleImage(file, 1600, 0.82);
+      dPhotos.push({ blob, url: URL.createObjectURL(blob) });
+    }catch(err){ msg.textContent = 'Photo illisible : ' + file.name; }
+  }
+  renderDPhotos();
+}
+
+// Réduit la photo (max 1600 px, JPEG) : envoi plus rapide, moins de risque de dépasser les limites du serveur
+function downscaleImage(file, maxSide, quality){
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, maxSide / Math.max(img.width, img.height));
+      const w = Math.round(img.width * scale), h = Math.round(img.height * scale);
+      const c = document.createElement('canvas'); c.width = w; c.height = h;
+      c.getContext('2d').drawImage(img, 0, 0, w, h);
+      URL.revokeObjectURL(url);
+      c.toBlob(b => b ? resolve(b) : reject(new Error('toBlob')), 'image/jpeg', quality);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('load')); };
+    img.src = url;
+  });
+}
+
+function renderDPhotos(){
+  const el = document.getElementById('dThumbs');
+  if(!el) return;
+  el.innerHTML = dPhotos.map((p,i) =>
+    `<div class="img-thumb"><img src="${p.url}"><button class="rm" onclick="removeDPhoto(${i})">✕</button></div>`).join('');
+}
+function removeDPhoto(i){
+  const p = dPhotos.splice(i,1)[0];
+  if(p) URL.revokeObjectURL(p.url);
+  renderDPhotos();
+}
+
+async function submitAd(){
+  const v = id => document.getElementById(id).value.trim();
+  const msg = document.getElementById('dMsg');
+  msg.textContent = '';
+  const title = v('dTitle'), cat = v('dCat'), city = v('dCity'), tel = v('dTel'), price = v('dPrice');
+  if(title.length < 3) return msg.textContent = 'Le titre doit contenir au moins 3 caractères.';
+  if(!cat) return msg.textContent = 'Choisissez une catégorie.';
+  if(!city) return msg.textContent = 'La ville est requise.';
+  if(tel !== '' && !/^\d{10}$/.test(tel)) return msg.textContent = 'Le téléphone doit contenir exactement 10 chiffres.';
+  if(price !== '' && (isNaN(price) || Number(price) < 0)) return msg.textContent = 'Prix invalide.';
+
+  const btn = document.getElementById('dBtn');
+  btn.disabled = true; btn.textContent = 'Publication en cours…';
+
+  const fd = new FormData();
+  fd.append('title', title);
+  fd.append('category_id', cat);
+  fd.append('description', v('dDesc'));
+  fd.append('price', price);
+  fd.append('city', city);
+  fd.append('telephone', tel);
+  dPhotos.forEach((p,i) => fd.append('photos[]', p.blob, `photo_${i+1}.jpg`));
+
+  try{
+    const res = await fetch(API_BASE + '/api_ad_create.php', { method:'POST', credentials:'include', body: fd });
+    const data = await res.json();
+    if(data.success){
+      dPhotos.forEach(p => URL.revokeObjectURL(p.url));
+      dPhotos = [];
+      const live = data.status === 'active' || data.status === 'approved';
+      document.getElementById('deposer-form').innerHTML = `
+        <div id="dSuccess" style="text-align:center;padding:24px 4px;">
+          <div style="font-size:46px;">✅</div>
+          <h3 style="margin:10px 0 8px;">Annonce ${live ? 'publiée' : 'envoyée'}</h3>
+          <p style="color:#555;font-size:14.5px;line-height:1.5;">${escapeHtml(data.message || '')}</p>
+          <button class="btn" style="margin-top:18px;" onclick="openMesAnnonces()">Voir mes annonces</button>
+          <button class="btn ghost" style="margin-top:10px;" onclick="renderDeposerForm()">Déposer une autre annonce</button>
+        </div>`;
+      loadListings(null, 'homeList');
+    } else {
+      msg.textContent = data.error || "Erreur lors de la publication.";
+      if(data.error === 'Non connecté.'){ currentUser = null; updateDeposerGate(); }
+      btn.disabled = false; btn.textContent = "Publier l'annonce";
+    }
+  }catch(e){
+    msg.textContent = 'Erreur réseau. Vérifiez votre connexion et réessayez.';
+    btn.disabled = false; btn.textContent = "Publier l'annonce";
+  }
+}
+
+/* ---------- AUTOCOMPLÉTION VILLE (API gouvernementale, comme sur le site) ---------- */
+let cityTimer = null;
+function bindCityAutocomplete(inputId, listId){
+  const inp = document.getElementById(inputId), dl = document.getElementById(listId);
+  if(!inp || !dl) return;
+  inp.addEventListener('input', () => {
+    clearTimeout(cityTimer);
+    const v = inp.value.trim();
+    if(v.length < 2){ dl.innerHTML = ''; return; }
+    cityTimer = setTimeout(async () => {
+      try{
+        const r = await fetch('https://geo.api.gouv.fr/communes?nom=' + encodeURIComponent(v) + '&fields=nom&boost=population&limit=10');
+        const d = await r.json();
+        dl.innerHTML = d.map(c => `<option value="${escapeHtml(c.nom)}">`).join('');
+      }catch(e){}
+    }, 250);
+  });
+}
+
+/* ---------- INSCRIPTION (nouvel adhérent) ---------- */
+function openRegister(){
+  openSubpage('Créer un compte', 'register');
+  document.getElementById('subpageBody').innerHTML = `
+    <datalist id="rCityList"></datalist>
+    <div class="field"><label>Nom *</label><input id="rNom" placeholder="Nom"></div>
+    <div class="field"><label>Prénom</label><input id="rPrenom" placeholder="Prénom"></div>
+    <div class="field"><label>Email *</label><input id="rEmail" type="email" placeholder="vous@exemple.com"></div>
+    <div class="field"><label>Mot de passe * (8 caractères min.)</label><input id="rPass" type="password"></div>
+    <div class="field"><label>Confirmer le mot de passe *</label><input id="rPass2" type="password"></div>
+    <div class="field"><label>Téléphone (10 chiffres)</label><input id="rTel" type="tel" inputmode="numeric" maxlength="10" placeholder="0612345678"></div>
+    <div class="field"><label>Ville *</label><input id="rCity" list="rCityList" autocomplete="off" placeholder="Tapez une ville"></div>
+    <label style="display:flex;gap:10px;align-items:flex-start;font-size:13px;color:#555;margin:6px 0 14px;">
+      <input type="checkbox" id="rTerms" style="margin-top:3px;">
+      <span>J'accepte les <a href="#" onclick="window.open(API_BASE+'/terms.php','_system');return false;">conditions d'utilisation</a>
+      et la <a href="#" onclick="window.open(API_BASE+'/privacy.php','_system');return false;">politique de confidentialité</a>.</span>
+    </label>
+    <div id="rMsg" style="color:#dc2626;font-size:13px;margin-bottom:10px;"></div>
+    <button class="btn" id="rBtn" onclick="submitRegister()">S'inscrire</button>
+    <button class="btn ghost" style="margin-top:10px;" onclick="closeSubpage();closeDetail();go('profil')">J'ai déjà un compte</button>
+  `;
+  document.getElementById('rTel').addEventListener('input', function(){ this.value = this.value.replace(/\D/g,''); });
+  bindCityAutocomplete('rCity', 'rCityList');
+}
+
+async function submitRegister(){
+  const v = id => document.getElementById(id).value.trim();
+  const nom = v('rNom'), email = v('rEmail'), city = v('rCity'), tel = v('rTel');
+  const pass = document.getElementById('rPass').value, pass2 = document.getElementById('rPass2').value;
+  const msg = document.getElementById('rMsg');
+  msg.textContent = '';
+
+  if(nom.length < 2) return msg.textContent = 'Le nom doit contenir au moins 2 caractères.';
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return msg.textContent = 'Veuillez entrer un email valide.';
+  if(pass.length < 8) return msg.textContent = 'Le mot de passe doit contenir au moins 8 caractères.';
+  if(pass !== pass2) return msg.textContent = 'Les mots de passe ne correspondent pas.';
+  if(tel !== '' && !/^\d{10}$/.test(tel)) return msg.textContent = 'Le téléphone doit contenir exactement 10 chiffres.';
+  if(city === '') return msg.textContent = 'La ville est requise.';
+  if(!document.getElementById('rTerms').checked) return msg.textContent = "Vous devez accepter les conditions d'utilisation.";
+
+  const btn = document.getElementById('rBtn');
+  btn.disabled = true; btn.textContent = 'Inscription…';
+  try{
+    const data = await apiFetch('/api_register.php', {method:'POST', body: JSON.stringify({
+      nom, prenom: v('rPrenom'), email, password: pass, confirm_password: pass2,
+      telephone: tel, city, terms: 1, website: ''
+    })});
+    if(data.success){
+      document.getElementById('subpageBody').innerHTML = `
+        <div style="text-align:center;padding:24px 4px;">
+          <div style="font-size:46px;">📧</div>
+          <h3 style="margin:10px 0 8px;">Compte créé !</h3>
+          <p style="color:#555;font-size:14.5px;line-height:1.5;">Un email de confirmation a été envoyé à <b>${escapeHtml(email)}</b>.
+          Cliquez sur le lien qu'il contient pour activer votre compte, puis connectez-vous.</p>
+          ${data.email_sent ? '' : '<p style="color:#b45309;font-size:13px;">L\'envoi de l\'email a peut-être échoué — contactez-nous si vous ne le recevez pas.</p>'}
+          <button class="btn" style="margin-top:18px;" onclick="closeSubpage();closeDetail();go('profil')">Aller à la connexion</button>
+        </div>`;
+    } else {
+      msg.textContent = data.error || "Erreur lors de l'inscription.";
+      btn.disabled = false; btn.textContent = "S'inscrire";
+    }
+  }catch(e){
+    msg.textContent = 'Erreur réseau.';
+    btn.disabled = false; btn.textContent = "S'inscrire";
+  }
+}
+
+/* ---------- DEMANDE DE VITRINE PRO ("Créer ma vitrine") ---------- */
+function openProDemande(){
+  openSubpage('Créer ma vitrine', 'pro-demande');
+  const secteurs = ['Agence immobilière','Garage / Concession auto','Artisan / BTP','Commerce','Services aux entreprises','Location saisonnière','Autre'];
+  document.getElementById('subpageBody').innerHTML = `
+    <datalist id="pCityList"></datalist>
+    <p style="color:#555;font-size:14px;line-height:1.5;margin:0 0 16px;">Dites-nous qui vous êtes : nous préparons votre page et vous la présentons avant sa mise en ligne. Sans engagement.</p>
+    <div class="field"><label>Nom de l'entreprise *</label><input id="pEnt"></div>
+    <div class="field"><label>Secteur</label>
+      <select id="pSect"><option value="">Choisir…</option>${secteurs.map(s=>`<option>${s}</option>`).join('')}</select></div>
+    <div class="field"><label>Votre nom *</label><input id="pContact" value="${escapeHtml((currentUser && currentUser.nom) || '')}"></div>
+    <div class="field"><label>Ville</label><input id="pVille" list="pCityList" autocomplete="off"></div>
+    <div class="field"><label>E-mail *</label><input id="pEmail" type="email" value="${escapeHtml((currentUser && currentUser.email) || '')}"></div>
+    <div class="field"><label>Téléphone</label><input id="pTel" type="tel"></div>
+    <div class="field"><label>Formule souhaitée</label>
+      <select id="pPlan">
+        <option value="gratuit">Découverte — gratuit</option>
+        <option value="pro" selected>Pro — offert pendant le lancement</option>
+        <option value="business">Business — sur demande</option>
+        <option value="entreprise">Entreprise — sur devis</option>
+      </select></div>
+    <div class="field"><label>Annonces en ligne aujourd'hui</label><input id="pVol" placeholder="Ex. une trentaine, toutes plateformes confondues"></div>
+    <div class="field"><label>Autre chose à nous dire ?</label><textarea id="pMessage" rows="3"></textarea></div>
+    <div id="pMsg" style="color:#dc2626;font-size:13px;margin-bottom:10px;"></div>
+    <button class="btn" id="pBtn" onclick="submitProDemande()">Envoyer ma demande</button>
+  `;
+  bindCityAutocomplete('pVille', 'pCityList');
+}
+
+async function submitProDemande(){
+  const v = id => document.getElementById(id).value.trim();
+  const msg = document.getElementById('pMsg');
+  msg.textContent = '';
+  if(!v('pEnt') || !v('pContact')) return msg.textContent = "Le nom de l'entreprise et votre nom sont obligatoires.";
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v('pEmail'))) return msg.textContent = 'Veuillez entrer un email valide.';
+
+  const btn = document.getElementById('pBtn');
+  btn.disabled = true; btn.textContent = 'Envoi…';
+  try{
+    const data = await apiFetch('/api_pro_demande.php', {method:'POST', body: JSON.stringify({
+      entreprise: v('pEnt'), secteur: v('pSect'), contact: v('pContact'), ville: v('pVille'),
+      email: v('pEmail'), telephone: v('pTel'), plan: v('pPlan'), volume: v('pVol'), message: v('pMessage')
+    })});
+    if(data.success){
+      document.getElementById('subpageBody').innerHTML = `
+        <div style="text-align:center;padding:24px 4px;">
+          <div style="font-size:46px;">✅</div>
+          <h3 style="margin:10px 0 8px;">Demande envoyée</h3>
+          <p style="color:#555;font-size:14.5px;line-height:1.5;">Nous revenons vers vous sous 48 heures ouvrées pour préparer votre vitrine.</p>
+          <button class="btn" style="margin-top:18px;" onclick="closeSubpage()">Fermer</button>
+        </div>`;
+    } else {
+      msg.textContent = data.error || "L'envoi n'a pas abouti.";
+      btn.disabled = false; btn.textContent = 'Envoyer ma demande';
+    }
+  }catch(e){
+    msg.textContent = 'Erreur réseau.';
+    btn.disabled = false; btn.textContent = 'Envoyer ma demande';
+  }
+}
+
+/* ---------- MOT DE PASSE OUBLIÉ ---------- */
+function openForgotPassword(){
+  openSubpage('Mot de passe oublié', 'forgot');
+  const prefill = (document.getElementById('loginEmail') || {}).value || '';
+  document.getElementById('subpageBody').innerHTML = `
+    <p style="color:#555;font-size:14px;line-height:1.5;margin:0 0 16px;">Entrez votre adresse email : nous vous enverrons un lien de réinitialisation valable <b>1 heure</b>.</p>
+    <div class="field"><label>Adresse email</label><input id="fEmail" type="email" placeholder="vous@exemple.com" value="${escapeHtml(prefill)}"></div>
+    <div id="fMsg" style="color:#dc2626;font-size:13px;margin-bottom:10px;"></div>
+    <button class="btn" id="fBtn" onclick="submitForgot()">Envoyer le lien</button>
+    <button class="btn ghost" style="margin-top:10px;" onclick="openResetPassword()">J'ai déjà reçu un lien</button>
+  `;
+}
+
+async function submitForgot(){
+  const email = document.getElementById('fEmail').value.trim();
+  const msg = document.getElementById('fMsg');
+  msg.style.color = '#dc2626'; msg.textContent = '';
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return msg.textContent = 'Veuillez entrer un email valide.';
+
+  const btn = document.getElementById('fBtn');
+  btn.disabled = true; btn.textContent = 'Envoi…';
+  try{
+    const data = await apiFetch('/api_forgot_password.php', {method:'POST', body: JSON.stringify({email})});
+    if(data.success){
+      document.getElementById('subpageBody').innerHTML = `
+        <div style="text-align:center;padding:24px 4px;">
+          <div style="font-size:46px;">📧</div>
+          <h3 style="margin:10px 0 8px;">Vérifiez vos emails</h3>
+          <p style="color:#555;font-size:14.5px;line-height:1.5;">${escapeHtml(data.message)}<br><br><b>Pensez à vérifier votre dossier spam.</b></p>
+          <button class="btn" style="margin-top:18px;" onclick="openResetPassword()">Saisir le lien reçu</button>
+          <button class="btn ghost" style="margin-top:10px;" onclick="closeSubpage()">Retour à la connexion</button>
+        </div>`;
+    } else {
+      msg.textContent = data.error || "L'envoi n'a pas abouti.";
+      btn.disabled = false; btn.textContent = 'Envoyer le lien';
+    }
+  }catch(e){
+    msg.textContent = 'Erreur réseau.';
+    btn.disabled = false; btn.textContent = 'Envoyer le lien';
+  }
+}
+
+function openResetPassword(){
+  openSubpage('Nouveau mot de passe', 'reset');
+  document.getElementById('subpageBody').innerHTML = `
+    <p style="color:#555;font-size:14px;line-height:1.5;margin:0 0 16px;">Collez ici le lien reçu par email (ou son code), puis choisissez un nouveau mot de passe.</p>
+    <div class="field"><label>Lien ou code reçu par email *</label><textarea id="rTok" rows="2" placeholder="https://www.ozannonces.ma/...token=..."></textarea></div>
+    <div class="field"><label>Nouveau mot de passe * (8 caractères min.)</label><input id="rNewPass" type="password"></div>
+    <div class="field"><label>Confirmer le mot de passe *</label><input id="rNewPass2" type="password"></div>
+    <div id="rsMsg" style="color:#dc2626;font-size:13px;margin-bottom:10px;"></div>
+    <button class="btn" id="rsBtn" onclick="submitResetPassword()">Modifier mon mot de passe</button>
+  `;
+}
+
+// Accepte le lien complet collé (…?token=xxx) ou le token seul
+function extractResetToken(raw){
+  const s = (raw || '').trim();
+  const m = s.match(/[?&]token=([^&\s#]+)/i);
+  return m ? decodeURIComponent(m[1]) : s;
+}
+
+async function submitResetPassword(){
+  const token = extractResetToken(document.getElementById('rTok').value);
+  const pass = document.getElementById('rNewPass').value;
+  const pass2 = document.getElementById('rNewPass2').value;
+  const msg = document.getElementById('rsMsg');
+  msg.textContent = '';
+  if(!token) return msg.textContent = 'Collez le lien reçu par email.';
+  if(pass.length < 8) return msg.textContent = 'Le mot de passe doit contenir au moins 8 caractères.';
+  if(pass !== pass2) return msg.textContent = 'Les mots de passe ne correspondent pas.';
+
+  const btn = document.getElementById('rsBtn');
+  btn.disabled = true; btn.textContent = 'Modification…';
+  try{
+    const data = await apiFetch('/api_reset_password.php', {method:'POST', body: JSON.stringify({
+      token, password: pass, confirm_password: pass2
+    })});
+    if(data.success){
+      document.getElementById('subpageBody').innerHTML = `
+        <div style="text-align:center;padding:24px 4px;">
+          <div style="font-size:46px;">✅</div>
+          <h3 style="margin:10px 0 8px;">Mot de passe modifié</h3>
+          <p style="color:#555;font-size:14.5px;line-height:1.5;">${escapeHtml(data.message)}</p>
+          <button class="btn" style="margin-top:18px;" onclick="closeSubpage();go('profil')">Se connecter</button>
+        </div>`;
+    } else {
+      msg.textContent = data.error || 'Erreur.';
+      btn.disabled = false; btn.textContent = 'Modifier mon mot de passe';
+    }
+  }catch(e){
+    msg.textContent = 'Erreur réseau.';
+    btn.disabled = false; btn.textContent = 'Modifier mon mot de passe';
+  }
+}
+
+/* ---------------- PROFIL (écran principal, connexion) ---------------- */
+async function loadProfil(){
+  const el = document.getElementById('profilContent');
+  try{
+    const res = await fetch(API_BASE + '/api_me.php', { credentials: 'include' });
+    const data = await res.json();
+    if(data.success && data.logged_in){
+      renderProfilLoggedIn(data.user);
+    } else {
+      renderProfilLoggedOut();
+    }
+  }catch(e){
+    console.warn('Profil indisponible', e);
+    renderProfilLoggedOut();
+  }
+}
+
+// Chaque rubrique ouvre désormais un écran natif léger (sous-page), au lieu
+// de naviguer vers la page desktop du site.
+function renderProfilLoggedIn(user){
+  document.getElementById('profilContent').innerHTML = `
+    <div class="avatar">${user.initial || '?'}</div>
+    <div class="profile-name">${escapeHtml(user.nom)}</div>
+    <div class="profile-sub">${escapeHtml(user.email)}</div>
+    <div class="menu-row" onclick="openProfileEdit()"><span class="l">👤 Mon Profil</span><span>›</span></div>
+    <div class="menu-row" onclick="openEspacePro()"><span class="l">🏪 Mon espace pro</span><span>›</span></div>
+    <div class="menu-row" onclick="openMesAnnonces()"><span class="l">📋 Mes annonces</span><span>›</span></div>
+    <div class="menu-row" onclick="openMessagerie()"><span class="l">💬 Ma Messagerie</span><span>›</span></div>
+    <button class="btn ghost" style="margin-top:14px;" onclick="logout()">Se déconnecter</button>
+  `;
+}
+
+function renderProfilLoggedOut(){
+  document.getElementById('profilContent').innerHTML = `
+    <p style="text-align:center;color:var(--muted);font-size:14px;margin:10px 0 20px;">Connectez-vous pour accéder à votre profil</p>
+    <div class="field"><label>Email</label><input id="loginEmail" type="email" placeholder="vous@exemple.com"></div>
+    <div class="field"><label>Mot de passe</label><input id="loginPassword" type="password" placeholder="••••••••"></div>
+    <div id="loginError" style="color:#dc2626;font-size:13px;margin-bottom:10px;"></div>
+    <div style="text-align:right;margin:-4px 0 10px;">
+  <a href="#" onclick="openForgotPassword();return false;" style="color:var(--orange-dark);font-size:13px;font-weight:600;">Mot de passe oublié ?</a>
+</div>
+    <button class="btn" onclick="submitLogin()">Se connecter</button>
+    <p style="text-align:center;color:var(--muted);font-size:13.5px;margin:18px 0 8px;">Pas encore de compte ?</p>
+    <button class="btn ghost" onclick="openRegister()">Créer un compte</button>
+  `;
+}
+
+async function submitLogin(){
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value.trim();
+  const errEl = document.getElementById('loginError');
+  errEl.textContent = '';
+  try{
+    const res = await fetch(API_BASE + '/api_login.php', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    const data = await res.json();
+    if(data.success){
+  if(data.session_id) localStorage.setItem('oz_sid', data.session_id); // ← indispensable
+  renderProfilLoggedIn(data.user);
+  await checkAuth();
+  if(pendingDetailId){ const id = pendingDetailId; pendingDetailId = null; openDetailById(id); }
+} else {
+      errEl.textContent = data.error || 'Connexion impossible.';
+    }
+  }catch(e){
+    errEl.textContent = 'Erreur de connexion.';
+  }
+}
+
+async function logout(){
+  try{ await fetch(API_BASE + '/api_logout.php', { credentials: 'include' }); }catch(e){}
+  localStorage.removeItem('oz_sid');
+  pendingDetailId = null;
+  renderProfilLoggedOut();
+  currentUser = null;
+  resetDeposer();
+  updateDeposerGate();
+}
+
+// Chargement initial : catégories, annonces de l'accueil, état de connexion
+loadCategories();
+loadListings(null, 'homeList');
+checkAuth();
+</script>
+</body>
+</html>
