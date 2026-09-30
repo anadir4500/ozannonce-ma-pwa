@@ -1068,9 +1068,16 @@ function bindCityAutocomplete(inputId, listId){
     if(v.length < 2){ dl.innerHTML = ''; return; }
     cityTimer = setTimeout(async () => {
       try{
-        const r = await fetch('https://geo.api.gouv.fr/communes?nom=' + encodeURIComponent(v) + '&fields=nom&boost=population&limit=10');
-        const d = await r.json();
-        dl.innerHTML = d.map(c => `<option value="${escapeHtml(c.nom)}">`).join('');
+        let names;
+        if(API_BASE.endsWith('.ma')){
+          const r = await fetch(API_BASE + '/get_cities.php?q=' + encodeURIComponent(v) + '&limit=10');
+          const d = await r.json();
+          names = (Array.isArray(d) ? d : []).map(c => typeof c === 'string' ? c : (c.name || c.nom || c.city || ''));
+        } else {
+          const r = await fetch('https://geo.api.gouv.fr/communes?nom=' + encodeURIComponent(v) + '&fields=nom&boost=population&limit=10');
+          names = (await r.json()).map(c => c.nom);
+        }
+        dl.innerHTML = names.filter(Boolean).map(n => `<option value="${escapeHtml(n)}">`).join('');
       }catch(e){}
     }, 250);
   });
