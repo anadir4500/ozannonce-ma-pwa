@@ -1300,8 +1300,11 @@ currency: API_BASE.endsWith('.ma') ? 'DH' : '€'
       showAiHint(escapeHtml(data.error || t('common.err')), 'info');
       btn.textContent = aiT().btn;
     }
-  }catch(e){ showAiHint(t('net.error'), 'info'); btn.textContent = aiT().btn; }
-  btn.disabled = false; aiState.busy = false;
+  }catch(e){
+  console.warn('describe error', e);
+  showAiHint(t('net.error') + ' <small>(' + escapeHtml(e.message || e) + ')</small>', 'info');
+  btn.textContent = aiT().btn;
+}
 }
 
 async function submitAd(){
