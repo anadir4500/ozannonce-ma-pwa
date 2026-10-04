@@ -1160,6 +1160,7 @@ function renderDeposerForm(){
   `;
   document.getElementById('dPhotoInput').addEventListener('change', onPhotosPicked);
   document.getElementById('dTel').addEventListener('input', function(){ this.value = this.value.replace(/\D/g,''); });
+  document.getElementById('dTitle').addEventListener('blur', scheduleAutoDescription);
   bindCityAutocomplete('dCity', 'dCityList');
   fillDeposerCategories();
   // Préremplit le téléphone depuis le profil
@@ -1193,7 +1194,8 @@ async function onPhotosPicked(e){
       dPhotos.push({ blob, url: URL.createObjectURL(blob) });
     }catch(err){ msg.textContent = 'Photo illisible : ' + file.name; }
   }
-  renderDPhotos();
+   renderDPhotos();
+  scheduleAutoDescription();   // ← nouvelle ligne
 }
 
 // Réduit la photo (max 1600 px, JPEG) : envoi plus rapide, moins de risque de dépasser les limites du serveur
@@ -1269,22 +1271,39 @@ function showAiHint(html, kind){
   el.innerHTML = html;
 }
 
-async function generateDescription(){
+let autoTimer = null;
+function scheduleAutoDescription(){
+  clearTimeout(autoTimer);
+  autoTimer = setTimeout(() => generateDescription(true), 1200); // anti-rebond
+}
+
+async function generateDescription(auto){
+  auto = (auto === true); // true = déclenchement automatique, sinon clic sur le bouton
   const ta = document.getElementById('dDesc'), btn = document.getElementById('dAiBtn');
-  if(!ta || aiState.busy) return;
+  if(!ta) return;
+  if(aiState.busy){ if(auto) scheduleAutoDescription(); return; }
+
   const v = id => document.getElementById(id).value.trim();
   const title = v('dTitle');
-  if(title.length < 3){ showAiHint(aiT().need, 'info'); return; }
+  if(title.length < 3){ if(!auto) showAiHint(aiT().need, 'info'); return; }
 
+  // Ne jamais écraser un texte saisi par l'annonceur
   const cur = ta.value.trim();
-  if(cur !== '' && cur !== aiState.text && !confirm(aiT().replace)) return;
+  const userText = cur !== '' && cur !== aiState.text;
+  if(auto && userText) return;
+  if(!auto && userText && !confirm(aiT().replace)) return;
+
+  // Évite les appels inutiles (limite de 10 par heure)
+  const sel = document.getElementById('dCat');
+  const sig = title + '|' + sel.value + '|' + dPhotos.slice(0,3).map(p => p.blob.size).join(',');
+  if(auto && sig === aiState.sig) return;
+  aiState.sig = sig;
 
   aiState.busy = true; btn.disabled = true; btn.textContent = aiT().busy;
   showAiHint(aiT().busy, 'info');
   try{
     const photos = [];
     for(const p of dPhotos.slice(0, 3)) photos.push(await blobToB64(await downscaleImage(p.blob, 768, 0.7)));
-    const sel = document.getElementById('dCat');
     const payload = {
       title: title,
       category: sel.value ? sel.options[sel.selectedIndex].text : '',
@@ -1297,8 +1316,10 @@ async function generateDescription(){
     const data = await apiFetch('/api_ad_describe.php', {method:'POST', body: JSON.stringify(payload)});
     if(data.success){
       ta.value = data.description; aiState.text = data.description;
+      if(data.debug) console.warn('Diagnostic IA :', data.debug);
       showAiHint((data.source === 'ai' ? aiT().ai : aiT().tpl)
-        + (data.todo ? '<br><b>' + aiT().todo + '</b>' + escapeHtml(data.todo) : ''), 'ok');
+        + (data.todo ? '<br><b>' + aiT().todo + '</b>' + escapeHtml(data.todo) : '')
+        + (data.debug ? '<br><small>' + escapeHtml(data.debug) + '</small>' : ''), 'ok'); // debug : à retirer en production
       btn.textContent = aiT().again;
     } else {
       showAiHint(escapeHtml(data.error || t('common.err')), 'info');
