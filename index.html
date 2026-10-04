@@ -1641,5 +1641,10 @@ checkAuth();
 const h = location.hash.replace('#','');
 if(['deposer','annonces'].includes(h)) go(h);
 </script>
+  <script>
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js', {scope:'./'});
+}
+</script>
 </body>
 </html>
