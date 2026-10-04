@@ -1285,6 +1285,8 @@ async function generateDescription(){
     const photos = [];
     for(const p of dPhotos.slice(0, 3)) photos.push(await blobToB64(await downscaleImage(p.blob, 768, 0.7)));
     const sel = document.getElementById('dCat');
+  city: v('dCity'), price: v('dPrice'), lang: LANG, photos,
+currency: API_BASE.endsWith('.ma') ? 'DH' : '€'
     const data = await apiFetch('/api_ad_describe.php', {method:'POST', body: JSON.stringify({
       title, category: sel.value ? sel.options[sel.selectedIndex].text : '',
       city: v('dCity'), price: v('dPrice'), lang: LANG, photos
