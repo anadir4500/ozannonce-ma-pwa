@@ -1,38 +1,78 @@
 {
-"name": "ÔZAnnonces",
-"short_name": "ÔZAnnonces",
-"description": "Petites annonces : achetez, vendez, échangez.",
-"lang": "fr",
-"start_url": "./",
-"scope": "./",
-"display": "standalone",
-"orientation": "portrait",
-"background_color": "#faf9f7",
-"theme_color": "#f97316",
-"icons": [
-{
-"src": "icons/icon-192.png",
-"sizes": "192x192",
-"type": "image/png",
-"purpose": "any"
-},
-{
-"src": "icons/icon-512.png",
-"sizes": "512x512",
-"type": "image/png",
-"purpose": "any"
-},
-{
-"src": "icons/icon-maskable-512.png",
-"sizes": "512x512",
-"type": "image/png",
-"purpose": "maskable"
-},
-{
-"src": "icons/apple-touch-icon.png",
-"sizes": "180x180",
-"type": "image/png",
-"purpose": "any"
-}
-]
+  "name": "ÔZAnnonces - Petites Annonces Maroc",
+  "short_name": "ÔZAnnonces",
+  "description": "Plateforme #1 des petites annonces gratuites au Maroc",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0066cc",
+  "orientation": "portrait-primary",
+  "categories": ["shopping", "business"],
+  "lang": "fr-MA",
+  "icons": [
+    {
+      "src": "/icons/icon-72x72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-96x96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-128x128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-144x144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-152x152.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-384x384.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Publier une annonce",
+      "short_name": "Publier",
+      "description": "Publier une nouvelle annonce",
+      "url": "/formulaire_depot_annonce.php",
+      "icons": [{ "src": "/icons/shortcut-publish.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Rechercher",
+      "short_name": "Recherche",
+      "description": "Rechercher des annonces",
+      "url": "/search.php",
+      "icons": [{ "src": "/icons/shortcut-search.png", "sizes": "96x96" }]
+    }
+  ]
 }
