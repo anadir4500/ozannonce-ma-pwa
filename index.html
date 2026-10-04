@@ -1,3 +1,1274 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ÔZAnnonces — App</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#f97316">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="ÔZAnnonces">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16x16.png">
+<style>
+:root{
+  --orange:#f97316; --orange-dark:#ea580c; --bg:#faf9f7; --card:#ffffff;
+  --text:#1f2937; --muted:#8b8f99; --border:#eee;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+  box-sizing:border-box;
+}
+*{box-sizing:border-box;}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;}
+body{display:flex;justify-content:center;}
+#phone{width:100%;max-width:430px;min-height:100vh;background:var(--bg);
+  display:flex;flex-direction:column;position:relative;overflow:hidden;}
+
+/* Header */
+header{padding:14px 20px 14px;background:linear-gradient(180deg,#fff7ed 0%,#ffffff 100%);
+  border-bottom:1px solid var(--border);position:sticky;top:0;z-index:5;
+  box-shadow:0 2px 8px -4px rgba(0,0,0,.06);}
+.logo{font-size:20px;font-weight:800;letter-spacing:.3px;margin-bottom:8px;text-align:left;}
+.logo span{text-shadow:0 3px 5px rgba(0,0,0,.32);}
+.logo .o{color:#2563eb;} .logo .z{color:#111827;} .logo .a{color:#dc2626;} .logo .rest{color:#111827;}
+header .greet{font-size:17px;font-weight:700;}
+header .sub{color:var(--muted);font-size:14px;margin-top:2px;}
+
+/* Screens */
+.screen{display:none;flex:1;overflow-y:auto;padding:16px 16px 90px;}
+.screen.active{display:block;}
+
+/* Search */
+.search{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--border);
+  border-radius:16px;padding:14px 16px;margin-bottom:18px;box-shadow:0 1px 3px rgba(0,0,0,.04);}
+.search input{border:none;outline:none;flex:1;font-size:15px;background:transparent;}
+.search span{font-size:18px;}
+
+/* Category grid */
+.cats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:22px;}
+.cat{background:#fff;border-radius:16px;padding:14px 6px;text-align:center;
+  border:1px solid var(--border);cursor:pointer;transition:transform .1s;}
+.cat:active{transform:scale(.95);}
+.cat .ico{font-size:24px;margin-bottom:6px;}
+.cat .lab{font-size:10px;color:var(--muted);font-weight:600;line-height:1.25;}
+
+h3.section{font-size:16px;margin:0 0 12px;font-weight:700;}
+
+/* Ad cards */
+.ad-list{display:flex;flex-direction:column;gap:12px;}
+.ad-card{background:#fff;border-radius:18px;border:1px solid var(--border);overflow:hidden;
+  display:flex;gap:12px;padding:10px;cursor:pointer;transition:transform .1s;}
+.ad-card:active{transform:scale(.98);}
+.ad-thumb{width:76px;height:76px;border-radius:14px;flex-shrink:0;display:flex;
+  align-items:center;justify-content:center;font-size:28px;color:#fff;overflow:hidden;}
+.ad-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
+.ad-info{flex:1;min-width:0;}
+.ad-title{font-weight:700;font-size:14.5px;margin-bottom:3px;}
+.ad-price{color:var(--orange-dark);font-weight:800;font-size:15px;}
+.ad-loc{color:var(--muted);font-size:12px;margin-top:4px;}
+
+.chips{display:flex;gap:8px;overflow-x:auto;margin-bottom:16px;padding-bottom:2px;}
+.chip{flex-shrink:0;padding:8px 16px;border-radius:999px;background:#fff;border:1px solid var(--border);
+  font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;}
+.chip.on{background:var(--orange);color:#fff;border-color:var(--orange);}
+
+/* CTA banner */
+.banner{position:relative;overflow:hidden;background:linear-gradient(135deg,#fb923c,#dc2626);border-radius:20px;
+  padding:22px;color:#fff;margin-bottom:22px;box-shadow:0 8px 20px -6px rgba(220,38,38,.45);}
+.banner::after{content:'';position:absolute;top:-30px;right:-30px;width:110px;height:110px;
+  background:rgba(255,255,255,.18);border-radius:50%;}
+.banner b{font-size:17px;display:block;margin-bottom:4px;position:relative;}
+.banner span{font-size:13px;opacity:.95;position:relative;display:block;}
+
+/* Buttons */
+.btn{display:block;width:100%;background:var(--orange);color:#fff;border:none;border-radius:14px;
+  padding:15px;font-size:15.5px;font-weight:700;cursor:pointer;text-align:center;}
+.btn:active{background:var(--orange-dark);}
+.btn.ghost{background:#fff;color:var(--text);border:1.5px solid var(--border);}
+.btn.danger{background:#fff;color:#dc2626;border:1.5px solid #fecaca;}
+.btn.small{padding:10px;font-size:13.5px;border-radius:10px;}
+
+/* Form */
+.field{margin-bottom:14px;}
+.field label{display:block;font-size:13px;font-weight:600;color:var(--muted);margin-bottom:6px;}
+.field input,.field select,.field textarea{width:100%;padding:13px 14px;border-radius:12px;
+  border:1px solid var(--border);font-size:15px;background:#fff;font-family:inherit;}
+.upload{border:2px dashed var(--border);border-radius:16px;padding:26px;text-align:center;
+  color:var(--muted);font-size:13px;margin-bottom:16px;background:#fff;}
+
+/* Detail overlay */
+#detail{position:absolute;inset:0;background:var(--bg);z-index:20;transform:translateX(100%);
+  transition:transform .25s ease;display:flex;flex-direction:column;}
+#detail.open{transform:translateX(0);}
+.detail-hero{height:230px;background:linear-gradient(135deg,#fdba74,#f97316);display:flex;
+  align-items:center;justify-content:center;font-size:60px;position:relative;flex-shrink:0;}
+.back-btn{position:absolute;top:calc(16px + env(safe-area-inset-top,0px));left:16px;background:#fff;
+  border:none;border-radius:50%;width:38px;height:38px;font-size:18px;cursor:pointer;}
+.detail-body{padding:20px;overflow-y:auto;flex:1;}
+.detail-body h2{margin:0 0 6px;font-size:20px;}
+.detail-body .price{color:var(--orange-dark);font-weight:800;font-size:22px;margin-bottom:14px;}
+.detail-body p{color:#555;line-height:1.5;font-size:14.5px;}
+.detail-footer{padding:14px 20px;border-top:1px solid var(--border);background:#fff;}
+
+/* Subpage overlay (Profil / Mes annonces / Messagerie / Espace pro) */
+#subpage{position:absolute;inset:0;background:var(--bg);z-index:25;transform:translateX(100%);
+  transition:transform .25s ease;display:flex;flex-direction:column;}
+#subpage.open{transform:translateX(0);}
+.subpage-bar{display:flex;align-items:center;gap:12px;padding:calc(14px + env(safe-area-inset-top,0px)) 16px 14px;
+  background:#fff;border-bottom:1px solid var(--border);flex-shrink:0;position:sticky;top:0;z-index:2;}
+.subpage-bar button{background:var(--bg);border:none;border-radius:50%;width:34px;height:34px;
+  font-size:17px;cursor:pointer;flex-shrink:0;}
+.subpage-bar .t{font-weight:700;font-size:16.5px;}
+.subpage-body{flex:1;overflow-y:auto;padding:16px 16px 40px;}
+.subpage-loading{text-align:center;color:var(--muted);font-size:13px;padding:30px 0;}
+
+/* Ad edit thumb row */
+.img-thumb-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;}
+.img-thumb{position:relative;width:70px;height:70px;border-radius:12px;overflow:hidden;border:1px solid var(--border);}
+.img-thumb img{width:100%;height:100%;object-fit:cover;}
+.img-thumb .rm{position:absolute;top:2px;right:2px;background:rgba(0,0,0,.55);color:#fff;border:none;
+  border-radius:50%;width:20px;height:20px;font-size:11px;cursor:pointer;line-height:1;}
+
+/* Conversation rows */
+.conv-row{display:flex;gap:12px;background:#fff;border-radius:16px;border:1px solid var(--border);
+  padding:10px;margin-bottom:10px;cursor:pointer;align-items:center;}
+.conv-thumb{width:52px;height:52px;border-radius:12px;background:var(--orange);flex-shrink:0;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px;}
+.conv-thumb img{width:100%;height:100%;object-fit:cover;}
+.conv-info{flex:1;min-width:0;}
+.conv-title{font-weight:700;font-size:14px;display:flex;align-items:center;gap:6px;}
+.conv-badge{background:var(--orange);color:#fff;font-size:10.5px;font-weight:800;border-radius:999px;
+  padding:2px 7px;flex-shrink:0;}
+.conv-date{color:var(--muted);font-size:12px;margin-top:2px;}
+
+/* Chat */
+#chatWrap{display:flex;flex-direction:column;height:100%;}
+#chatOwner{background:#fff;border-radius:16px;border:1px solid var(--border);padding:14px;margin-bottom:14px;font-size:13px;color:#444;}
+#chatOwner .stars{color:#f5a623;font-size:15px;margin:4px 0;}
+#chatMessages{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding:4px 0 12px;}
+.msg{max-width:78%;padding:10px 13px;border-radius:16px;font-size:14px;line-height:1.4;}
+.msg.received{align-self:flex-start;background:#fff;border:1px solid var(--border);border-bottom-left-radius:4px;}
+.msg.sent{align-self:flex-end;background:var(--orange);color:#fff;border-bottom-right-radius:4px;}
+.msg .mt{font-size:10.5px;opacity:.7;margin-top:4px;display:block;}
+#chatForm{display:flex;gap:8px;padding-top:10px;flex-shrink:0;}
+#chatForm textarea{flex:1;border:1px solid var(--border);border-radius:14px;padding:11px 14px;font-size:14px;
+  resize:none;max-height:90px;font-family:inherit;}
+#chatForm button{background:var(--orange);color:#fff;border:none;border-radius:50%;width:44px;height:44px;
+  font-size:16px;flex-shrink:0;cursor:pointer;}
+
+/* Profile */
+.avatar{width:70px;height:70px;border-radius:50%;background:var(--orange);color:#fff;
+  display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:700;margin:10px auto 6px;}
+.profile-name{text-align:center;font-weight:700;font-size:17px;}
+.profile-sub{text-align:center;color:var(--muted);font-size:13px;margin-bottom:20px;}
+.menu-row{display:flex;align-items:center;justify-content:space-between;background:#fff;
+  padding:15px 16px;border-radius:14px;margin-bottom:10px;border:1px solid var(--border);cursor:pointer;}
+.menu-row span.l{display:flex;align-items:center;gap:12px;font-size:14.5px;font-weight:600;}
+
+/* Bottom nav */
+nav{position:absolute;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--border);
+  display:flex;padding:8px 4px calc(8px + env(safe-area-inset-bottom,0px));z-index:10;}
+nav button{flex:1;background:none;border:none;display:flex;flex-direction:column;align-items:center;
+  gap:3px;padding:6px 0;color:var(--muted);font-size:10.5px;font-weight:600;cursor:pointer;}
+nav button .ic{font-size:20px;}
+nav button.active{color:var(--orange-dark);}
+#detail .back-btn{z-index:3;box-shadow:0 2px 8px rgba(0,0,0,.2);}
+.detail-scroll{flex:1;overflow-y:auto;}
+.gallery{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;height:240px;
+  background:linear-gradient(135deg,#fdba74,#f97316);}
+.gallery>*{flex:0 0 100%;scroll-snap-align:center;display:flex;align-items:center;justify-content:center;font-size:60px;}
+.gallery img{width:100%;height:100%;object-fit:cover;}
+.dt-body{padding:18px 18px 24px;}
+.dt-body h2{margin:0 0 6px;font-size:20px;}
+.dt-price{color:var(--orange-dark);font-weight:800;font-size:22px;margin-bottom:10px;}
+.dt-meta{color:var(--muted);font-size:12.5px;margin-bottom:14px;}
+.dt-tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;}
+.dt-tag{background:#fff7ed;color:var(--orange-dark);border-radius:999px;padding:4px 10px;font-size:12px;font-weight:600;}
+.dt-h{font-size:14px;font-weight:700;margin:18px 0 8px;}
+.dt-desc{color:#555;line-height:1.5;font-size:14.5px;white-space:pre-line;}
+.dt-attr{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:13.5px;}
+.dt-attr span:first-child{color:var(--muted);}
+.dt-seller{background:#fff;border:1px solid var(--border);border-radius:16px;padding:14px;font-size:14px;}
+.dt-phone{display:block;margin-top:8px;color:var(--orange-dark);font-weight:800;font-size:16px;text-decoration:none;}
+.dt-gate{background:#fff7ed;border:1px solid #fed7aa;border-radius:14px;padding:14px;color:#7c2d12;font-size:13.5px;}
+.dt-sim{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;}
+.dt-sim .s{flex:0 0 130px;background:#fff;border:1px solid var(--border);border-radius:14px;overflow:hidden;cursor:pointer;}
+.dt-sim .s .im{height:80px;background:var(--orange);display:flex;align-items:center;justify-content:center;color:#fff;font-size:24px;}
+.dt-sim .s img{width:100%;height:100%;object-fit:cover;}
+.dt-sim .s .tx{padding:7px 8px;font-size:12px;font-weight:600;}
+[dir=rtl] .logo,[dir=rtl] .ad-card,[dir=rtl] .ad-info,[dir=rtl] .dt-body,[dir=rtl] .field label{text-align:right}
+[dir=rtl] .back-btn,[dir=rtl] .subpage-bar button{transform:scaleX(-1)}
+[dir=rtl] .back-btn{left:auto;right:16px}
+[dir=rtl] #detail,[dir=rtl] #subpage{transform:translateX(-100%)}
+[dir=rtl] #detail.open,[dir=rtl] #subpage.open{transform:translateX(0)}
+[dir=rtl] .banner::after{right:auto;left:-30px}
+[dir=rtl] .msg.received{border-bottom-left-radius:16px;border-bottom-right-radius:4px}
+[dir=rtl] .msg.sent{border-bottom-right-radius:16px;border-bottom-left-radius:4px}
+.ad-card{position:relative;}
+.new-badge{position:absolute;top:10px;left:10px;background:#16a34a;color:#fff;font-size:9px;
+  font-weight:800;letter-spacing:.4px;padding:3px 7px;border-radius:14px 0 8px 0;z-index:2;
+  box-shadow:0 1px 3px rgba(0,0,0,.25);}
+[dir=rtl] .new-badge{left:auto;right:10px;border-radius:0 14px 0 8px;}
+
+/* Visionneuse photos (lightbox) */
+/* Visionneuse photos (lightbox) */
+#lightbox{position:absolute;inset:0;background:#000;z-index:50;display:none;flex-direction:column;}
+#lightbox.open{display:flex;}
+.lb-count{position:absolute;top:calc(16px + env(safe-area-inset-top,0px));left:16px;z-index:3;
+  color:#fff;font-size:14px;font-weight:700;}
+.lb-top-btns{position:absolute;top:calc(8px + env(safe-area-inset-top,0px));right:8px;z-index:3;display:flex;gap:4px;}
+.lb-btn{width:40px;height:40px;border:none;border-radius:50%;background:transparent;color:#fff;
+  font-size:19px;cursor:pointer;}
+.lb-btn:active{background:rgba(255,255,255,.18);}
+.lb-nav{position:absolute;top:45%;z-index:3;width:40px;height:40px;border:none;border-radius:50%;
+  background:rgba(255,255,255,.16);color:#fff;font-size:18px;cursor:pointer;}
+.lb-prev{left:8px;} .lb-next{right:8px;}
+.lb-nav.hide{display:none;}
+.lb-track{flex:1;min-height:0;display:flex;overflow-x:auto;scroll-snap-type:x mandatory;
+  -webkit-overflow-scrolling:touch;scrollbar-width:none;}
+.lb-track::-webkit-scrollbar{display:none;}
+.lb-slide{flex:0 0 100%;height:100%;scroll-snap-align:center;scroll-snap-stop:always;display:flex;
+  align-items:center;justify-content:center;overflow:hidden;touch-action:pan-x;}
+.lb-slide img{max-width:100%;max-height:100%;object-fit:contain;transform-origin:center center;
+  user-select:none;-webkit-user-drag:none;will-change:transform;}
+.lb-caption{flex-shrink:0;color:#fff;font-size:12.5px;text-align:center;padding:8px 16px 6px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.lb-thumbs{flex-shrink:0;display:flex;gap:6px;overflow-x:auto;justify-content:safe center;
+  padding:8px 10px calc(10px + env(safe-area-inset-bottom,0px));background:#111;scrollbar-width:none;}
+.lb-thumbs::-webkit-scrollbar{display:none;}
+.lb-thumb{flex:0 0 auto;width:54px;height:54px;border-radius:4px;overflow:hidden;
+  border:2px solid transparent;opacity:.65;cursor:pointer;padding:0;background:#222;}
+.lb-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
+.lb-thumb.on{border-color:#dc2626;opacity:1;}
+.gallery>*{cursor:zoom-in;}
+</style>
+</head>
+<body>
+<div id="phone">
+
+  <header>
+    <div class="logo"><span class="o">Ô</span><span class="z">Z</span><span class="a">A</span><span class="rest">nnonces</span></div>
+    <select id="langSelect" onchange="setLang(this.value)" style="float:right;border:1px solid var(--border);border-radius:10px;padding:4px 6px;background:#fff;font-size:13px"><option value="fr">Français</option><option value="en">English</option><option value="ar">العربية</option><option value="es">Español</option></select>
+    <div class="greet" id="greetTxt" data-i18n="hdr.hello">Bonjour 👋</div>
+    <div class="sub" data-i18n="hdr.sub">Trouvez ce qu'il vous faut, en un instant</div>
+  </header>
+
+  <!-- ACCUEIL -->
+  <div class="screen active" id="s-accueil">
+    <div class="search"><span>🔍</span><input id="homeQ" data-i18n-ph="home.search_ph" placeholder="Que recherchez-vous ?" enterkeyhint="search">
+  <button class="btn small" style="width:auto;padding:8px 12px;flex-shrink:0;" onclick="doHomeSearch()" data-i18n="home.search_btn">Rechercher</button></div>
+    <div class="cats" id="catsGrid"></div>
+    <div class="banner">
+      <b data-i18n="home.banner_t">Une seconde vie pour vos objets 🌿</b>
+      <span data-i18n="home.banner_s">Déposez votre première annonce en moins d'une minute.</span>
+    </div>
+    <h3 class="section" data-i18n="home.near">Près de chez vous</h3>
+    <div class="ad-list" id="homeList"></div>
+  </div>
+
+  <!-- ANNONCES -->
+  <div class="screen" id="s-annonces">
+  <div class="search" style="margin-bottom:10px;">
+    <span>🔍</span><input id="fltQ" data-i18n-ph="list.search_ph" placeholder="Rechercher une annonce…" enterkeyhint="search">
+    <button class="btn small" style="width:auto;padding:8px 12px;flex-shrink:0;" onclick="doSearch()" data-i18n="home.search_btn">OK</button>
+    <button class="btn small" style="width:auto;padding:8px 12px;flex-shrink:0;" onclick="openFilters()">⚙️ <span data-i18n="list.filters">Filtres</span><span id="fltBadge"></span></button>
+  </div>
+  <div id="fltSummary" style="font-size:12.5px;color:var(--muted);margin:0 2px 10px;"></div>
+  <div class="chips" id="chipsRow"></div>
+  <div class="ad-list" id="fullList"></div>
+</div>
+
+
+  <!-- DÉPOSER -->
+  <div class="screen" id="s-deposer">
+    <div id="deposer-gate" style="display:none;">
+      <h3 class="section" data-i18n="post.title">Déposer une annonce</h3>
+      <p style="color:var(--muted);font-size:14px;margin-bottom:18px;" data-i18n="post.need_login">Vous devez être connecté pour déposer une annonce.</p>
+      <button class="btn" onclick="go('profil')" data-i18n="auth.login">Se connecter</button>
+      <button class="btn ghost" style="margin-top:10px;" onclick="openRegister()" data-i18n="auth.create">Créer un compte</button>
+    </div>
+    <div id="deposer-form"></div>
+  </div>
+
+  <!-- PROFIL -->
+  <div class="screen" id="s-profil">
+    <div id="profilContent">
+      <p style="text-align:center;color:var(--muted);font-size:13px;padding:20px 0;">Chargement du profil…</p>
+    </div>
+  </div>
+
+  <!-- DÉTAIL ANNONCE -->
+  <div id="detail">
+  <button class="back-btn" onclick="closeDetail()">←</button>
+  <div class="detail-scroll" id="detailScroll"></div>
+  <div class="detail-footer" id="detailFooter"></div>
+</div>
+
+<!-- VISIONNEUSE PHOTOS -->
+   
+  <div id="lightbox">
+    <div class="lb-count" id="lbCount"></div>
+    <div class="lb-top-btns">
+      <button class="lb-btn" onclick="lbToggleZoom()" aria-label="Zoom">🔍</button>
+      <button class="lb-btn" onclick="closeLightbox()" aria-label="Fermer">✕</button>
+    </div>
+    <button class="lb-nav lb-prev" id="lbPrev" onclick="lbGo(-1)">←</button>
+    <button class="lb-nav lb-next" id="lbNext" onclick="lbGo(1)">→</button>
+    <div class="lb-track" id="lbTrack"></div>
+    <div class="lb-caption" id="lbCaption"></div>
+    <div class="lb-thumbs" id="lbThumbs"></div>
+  </div>
+
+  <!-- SOUS-PAGES NATIVES (Profil / Mes annonces / Messagerie / Espace pro) -->
+  <div id="subpage">
+    <div class="subpage-bar">
+      <button onclick="subpageBack()">←</button>
+      <span class="t" id="subpageTitle">Titre</span>
+    </div>
+    <div class="subpage-body" id="subpageBody"></div>
+  </div>
+
+  <nav>
+    <button class="active" data-s="accueil" onclick="go('accueil')"><span class="ic">🏠</span><span data-i18n="nav.home">Accueil</span></button>
+    <button data-s="annonces" onclick="go('annonces')"><span class="ic">🔎</span><span data-i18n="nav.ads">Annonces</span></button>
+    <button data-s="deposer" onclick="go('deposer')"><span class="ic">➕</span><span data-i18n="nav.post">Déposer</span></button>
+    <button data-s="profil" onclick="go('profil')"><span class="ic">👤</span><span data-i18n="nav.profile">Profil</span></button>
+  </nav>
+</div>
+
+<script src="i18n.js"></script>
+<script src="i18n_extra.js"></script>
+<script src="i18n_forms.js"></script>
+<script>
+const API_BASE = 'https://www.ozannonces.ma';
+
+// Les cookies tiers étant bloqués par les WebView, on renvoie l'ID de session en en-tête
+const _origFetch = window.fetch.bind(window);
+window.fetch = function(url, opts){
+  opts = opts || {};
+  if(typeof url === 'string' && url.indexOf(API_BASE) === 0){
+    const sid = localStorage.getItem('oz_sid');
+    if(sid) opts = Object.assign({}, opts, { headers: Object.assign({}, opts.headers || {}, {'X-Session-Id': sid}) });
+  }
+  if(typeof url === 'string' && url.indexOf(API_BASE) === 0) url += (url.indexOf('?') > -1 ? '&' : '?') + 'lang=' + LANG;
+  return _origFetch(url, opts);
+};
+
+// Icône + libellé lisible pour chaque catégorie (clé = slug renvoyé par l'API)
+const CAT_META = {
+  immobilier:          {icon:'🏠', label:'Immobilier',          color:'#f97316'},
+  auto_moto:           {icon:'🚗', label:'Véhicules',           color:'#ef4444'},
+  emploi_services:     {icon:'💼', label:'Emploi & Services',   color:'#0ea5e9'},
+  ozamarket:           {icon:'🛒', label:'OZAMarket',           color:'#8b5cf6'},
+  locations_vacances:  {icon:'🏖️', label:'Locations & Vacances',color:'#14b8a6'},
+  baby_sitting:        {icon:'👶', label:'Baby-Sitting',        color:'#ec4899'},
+  covoiturage:         {icon:'🚙', label:'Covoiturage',         color:'#3b82f6'},
+  dons:                {icon:'🎁', label:'Dons',                color:'#f59e0b'},
+  animaux:             {icon:'🐾', label:'Animaux',             color:'#22c55e'},
+};
+const CAT_ALIAS = {vehicules:'auto_moto',vehicule:'auto_moto',voitures:'auto_moto',voiture:'auto_moto',automoto:'auto_moto',auto:'auto_moto',moto:'auto_moto',
+  emploi:'emploi_services',emploiservices:'emploi_services',emploi_et_services:'emploi_services',services:'emploi_services',
+  babysitting:'baby_sitting',babysit:'baby_sitting',baby_sit:'baby_sitting',
+  locations_et_vacances:'locations_vacances',location_vacances:'locations_vacances',locations:'locations_vacances',vacances:'locations_vacances',
+  don:'dons',donation:'dons',animal:'animaux',covoiturages:'covoiturage',immo:'immobilier'};
+function normSlug(s){ s = String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,''); return CAT_ALIAS[s] || s; }
+function metaFor(slug){ const k = normSlug(slug); const m = CAT_META[k] || {icon:'📦', color:'#94a3b8'};
+  return Object.assign({}, m, { label: I18N.fr['cat.'+k] ? t('cat.'+k) : (slug || t('cat.others')) }); }
+function catName(slug, name){ const k = normSlug(slug); return I18N.fr['cat.'+k] ? t('cat.'+k) : (name || ''); }
+function catLabel(c){ return catName(c.slug, c.name); }
+
+let categories = [];
+let catsExpanded = false;
+let currentCategoryId = null;
+
+async function loadCategories(){
+  try{
+    const res = await fetch(API_BASE + '/api_categories.php');
+    const data = await res.json();
+    if(data.success) categories = data.categories;
+  }catch(e){ console.warn('Catégories indisponibles, hors-ligne ?', e); }
+  renderCats();
+  renderChips();
+  fillDeposerCategories();
+}
+
+function renderCats(){
+  const el = document.getElementById('catsGrid');
+  if(!categories.length){ el.innerHTML = `<p style="color:#999;font-size:13px;grid-column:1/-1">${t('cat.loading')}</p>`; return; }
+  let list = categories;
+  let items;
+  if(!catsExpanded){
+    items = list.slice(0,3).map(c=>{
+      const m = metaFor(c.slug);
+      return `<div class="cat" onclick="filterByCategory(${c.id})"><div class="ico">${m.icon}</div><div class="lab">${m.label}</div></div>`;
+    });
+    items.push(`<div class="cat" onclick="catsExpanded=true;renderCats();"><div class="ico">⋯</div><div class="lab">${t('cat.others')}</div></div>`);
+  } else {
+    items = list.map(c=>{
+      const m = metaFor(c.slug);
+      return `<div class="cat" onclick="filterByCategory(${c.id})"><div class="ico">${m.icon}</div><div class="lab">${m.label}</div></div>`;
+    });
+  }
+  el.innerHTML = items.join('');
+}
+
+function renderChips(){
+  const el = document.getElementById('chipsRow');
+  const chips = [`<div class="chip ${currentCategoryId===null?'on':''}" onclick="filterByCategory(null)">${t('cat.all')}</div>`]
+    .concat(categories.map(c=>{
+      const m = metaFor(c.slug);
+      return `<div class="chip ${currentCategoryId===c.id?'on':''}" onclick="filterByCategory(${c.id})">${m.icon} ${m.label}</div>`;
+    }));
+  el.innerHTML = chips.join('');
+}
+
+function filterByCategory(categoryId){
+  currentCategoryId = categoryId;
+  searchFilters.subId = null; searchFilters.subLabel = ''; searchFilters.type = '';
+  runSearch();
+  go('annonces');
+  renderChips();
+}
+
+let lastAds = []; // annonces actuellement affichées (pour ouvrir le détail par index)
+
+// État de pagination par liste ('homeList' ou 'fullList') : catégorie en cours,
+// page déjà chargée, nombre total d'annonces côté serveur, et les annonces
+// cumulées jusqu'ici (nécessaire pour que "Voir plus" ajoute à la suite au
+// lieu de tout recharger depuis le début).
+const listState = {};
+
+async function loadListings(categoryId, targetId){
+  const el = document.getElementById(targetId);
+  el.innerHTML = '<p style="color:#999;font-size:13px;text-align:center;padding:20px">'+t('list.loading')+'</p>';
+  listState[targetId] = { categoryId, page: 1, total: 0, items: [] };
+  try{
+    const url = buildUrl(targetId, 1, categoryId);
+    const res = await fetch(url);
+    const data = await res.json();
+    if(!data.success) throw new Error('Réponse invalide');
+    const st = listState[targetId];
+    st.items = data.listings;
+    st.total = data.total || data.listings.length;
+    lastAds = st.items;
+    if(lastAds[0]) console.debug('Exemple image annonce :', lastAds[0].image);
+    renderList(targetId, st.items, st.total);
+  }catch(e){
+    console.warn('Annonces indisponibles', e);
+    el.innerHTML = '<p style="color:#999;font-size:13px;text-align:center;padding:20px">'+t('list.error')+'</p>';
+  }
+}
+
+async function loadMoreListings(targetId){
+  const st = listState[targetId];
+  if(!st) return;
+  const btn = document.getElementById('more-' + targetId);
+  if(btn){ btn.disabled = true; btn.textContent = t('list.loading_short'); }
+  try{
+    const url = buildUrl(targetId, st.page + 1, st.categoryId);
+    const res = await fetch(url);
+    const data = await res.json();
+    if(!data.success) throw new Error('Réponse invalide');
+    st.page += 1;
+    st.items = st.items.concat(data.listings);
+    st.total = data.total || st.total;
+    lastAds = st.items;
+    renderList(targetId, st.items, st.total);
+  }catch(e){
+    console.warn('Chargement de la suite impossible', e);
+    if(btn){ btn.disabled = false; btn.textContent = t('list.retry'); }
+  }
+}
+const NEW_DAYS = 3; // une annonce est "nouvelle" pendant 3 jours
+function isNew(a){
+  const raw = a.created_at;
+  if(!raw) return false;
+  const d = new Date(String(raw).replace(' ', 'T'));
+  return !isNaN(d) && (Date.now() - d.getTime()) < NEW_DAYS * 86400000;
+}
+function newBadge(a){
+  if(!isNew(a)) return '';
+  const lab = {fr:'NOUVEAU', en:'NEW', ar:'جديد', es:'NUEVO'}[LANG] || 'NEW';
+  return `<span class="new-badge">${lab}</span>`;
+}
+
+function renderList(targetId, list, total){
+  const el = document.getElementById(targetId);
+  if(!list.length){
+    el.innerHTML = '<p style="color:#999;font-size:13px;text-align:center;padding:20px">'+t('list.none')+'</p>';
+    return;
+  }
+  const cards = list.map((a,i)=>{
+    const m = metaFor(a.category_slug);
+    const priceTxt = (a.price === null || a.price === 0) ? t('price.unset') : (Math.round(a.price) + ' ' + (a.currency||'€'));
+    const thumbInner = a.image
+      ? `<img src="${a.image}" alt="" onerror="this.outerHTML='<span>${m.icon}</span>'">`
+      : `<span>${m.icon}</span>`;
+    return `
+    <div class="ad-card" onclick="openDetail(${i})">
+      ${newBadge(a)}
+      <div class="ad-thumb" style="background:${m.color}">
+        ${thumbInner}
+      </div>
+      <div class="ad-info">
+        <div class="ad-title">${escapeHtml(a.title)}</div>
+        <div class="ad-price">${priceTxt}</div>
+        <div class="ad-loc">📍 ${escapeHtml(a.city || t('loc.unset'))}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  const hasMore = typeof total === 'number' && list.length < total;
+  const moreBtn = hasMore
+    ? `<button id="more-${targetId}" class="btn ghost" style="margin-top:14px;" onclick="loadMoreListings('${targetId}')">${t('list.more')}</button>`
+    : '';
+
+  el.innerHTML = cards + moreBtn;
+}
+
+/* ---------------- ÉTAT DE CONNEXION GLOBAL ---------------- */
+// Vérifié une fois au démarrage et remis à jour après connexion/déconnexion,
+// pour verrouiller "Déposer" et "Contacter le vendeur" côté app sans
+// attendre que l'utilisateur ouvre l'onglet Profil.
+let currentUser = null;
+async function checkAuth(){
+  try{
+    const res = await fetch(API_BASE + '/api_me.php', { credentials: 'include' });
+    const data = await res.json();
+    currentUser = (data.success && data.logged_in) ? data.user : null;
+  }catch(e){ currentUser = null; }
+  updateDeposerGate();
+}
+function updateDeposerGate(){
+  const gate = document.getElementById('deposer-gate');
+  const form = document.getElementById('deposer-form');
+  if(!gate || !form) return;
+  if(currentUser){
+    gate.style.display = 'none'; form.style.display = 'block';
+    if(!document.getElementById('dTitle') && !document.getElementById('dSuccess')) renderDeposerForm();
+  } else {
+    gate.style.display = 'block'; form.style.display = 'none';
+  }
+}
+
+function go(name){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('s-'+name).classList.add('active');
+  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active', b.dataset.s===name));
+  if(name==='profil') loadProfil();
+  if(name==='annonces' && !listState.fullList) runSearch();
+  if(name==='deposer') updateDeposerGate();
+}
+
+/* ---------- VISIONNEUSE PHOTOS (zoom + défilement + miniatures) ---------- */
+const lb = { idx:0, s:1, x:0, y:0, pinch:null, pan:null, lastTap:0, timer:null };
+
+function lbImg(){ const sl = document.getElementById('lbTrack').children[lb.idx]; return sl ? sl.firstElementChild : null; }
+function lbApply(){
+  const im = lbImg(), tr = document.getElementById('lbTrack');
+  if(im) im.style.transform = `translate(${lb.x}px,${lb.y}px) scale(${lb.s})`;
+  tr.style.overflowX = lb.s > 1 ? 'hidden' : 'auto';
+}
+function lbReset(){
+  const im = lbImg(); if(im) im.style.transform = '';
+  lb.s = 1; lb.x = 0; lb.y = 0; lb.pinch = null; lb.pan = null;
+  document.getElementById('lbTrack').style.overflowX = 'auto';
+}
+function lbClamp(){
+  const tr = document.getElementById('lbTrack');
+  const mx = (lb.s - 1) * tr.clientWidth / 2, my = (lb.s - 1) * tr.clientHeight / 2;
+  lb.x = Math.max(-mx, Math.min(mx, lb.x));
+  lb.y = Math.max(-my, Math.min(my, lb.y));
+}
+function lbUpdateUI(){
+  const n = document.getElementById('lbTrack').children.length;
+  document.getElementById('lbCount').textContent = (lb.idx + 1) + ' / ' + n;
+  document.getElementById('lbCaption').textContent = (currentDetail && currentDetail.annonce.title) || '';
+  document.getElementById('lbPrev').classList.toggle('hide', n < 2);
+  document.getElementById('lbNext').classList.toggle('hide', n < 2);
+  document.getElementById('lbThumbs').style.display = n < 2 ? 'none' : 'flex';
+  document.querySelectorAll('#lbThumbs .lb-thumb').forEach((b, i) => {
+    b.classList.toggle('on', i === lb.idx);
+    if(i === lb.idx) b.scrollIntoView({inline:'center', block:'nearest', behavior:'smooth'});
+  });
+}
+function lbShow(i, smooth){
+  const tr = document.getElementById('lbTrack');
+  const n = tr.children.length;
+  i = Math.max(0, Math.min(n - 1, i));
+  lbReset();
+  lb.idx = i;
+  tr.scrollTo({left: i * tr.clientWidth, behavior: smooth ? 'smooth' : 'auto'});
+  lbUpdateUI();
+}
+function lbGo(d){ lbShow(lb.idx + d, true); }
+function lbToggleZoom(){
+  if(lb.s > 1) lbReset(); else { lb.s = 2.5; lb.x = 0; lb.y = 0; lbApply(); }
+}
+
+function openLightbox(i){
+  const imgs = (currentDetail && currentDetail.annonce.images || []).filter(x => x.url);
+  if(!imgs.length) return;
+  document.getElementById('lbTrack').innerHTML = imgs.map(x =>
+    `<div class="lb-slide"><img src="${escapeHtml(x.url)}" alt="" draggable="false"></div>`).join('');
+  document.getElementById('lbThumbs').innerHTML = imgs.map((x, k) =>
+    `<button class="lb-thumb" onclick="lbShow(${k}, true)"><img src="${escapeHtml(x.url)}" alt=""></button>`).join('');
+  document.getElementById('lightbox').classList.add('open');
+  lbShow(i || 0, false);
+}
+function closeLightbox(){
+  document.getElementById('lightbox').classList.remove('open');
+  document.getElementById('lbTrack').innerHTML = '';
+  document.getElementById('lbThumbs').innerHTML = '';
+  lbReset();
+}
+
+(function initLightbox(){
+  const tr = document.getElementById('lbTrack');
+  const dist = t => Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+
+  // Swipe entre photos : met à jour compteur / miniatures, remet le zoom à zéro
+  tr.addEventListener('scroll', () => {
+    clearTimeout(lb.timer);
+    lb.timer = setTimeout(() => {
+      const i = Math.round(tr.scrollLeft / tr.clientWidth);
+      if(i !== lb.idx && i >= 0 && i < tr.children.length){ lbReset(); lb.idx = i; lbUpdateUI(); }
+    }, 80);
+  });
+
+  tr.addEventListener('touchstart', e => {
+    if(e.touches.length === 2){
+      lb.pinch = { d: dist(e.touches), s: lb.s };
+    } else if(e.touches.length === 1){
+      const now = Date.now();
+      if(now - lb.lastTap < 300){ lbToggleZoom(); lb.lastTap = 0; return; }
+      lb.lastTap = now;
+      lb.pan = { x: e.touches[0].clientX, y: e.touches[0].clientY, tx: lb.x, ty: lb.y };
+    }
+  }, {passive:true});
+
+  tr.addEventListener('touchmove', e => {
+    if(lb.pinch && e.touches.length === 2){
+      e.preventDefault();
+      lb.s = Math.max(1, Math.min(5, lb.pinch.s * dist(e.touches) / lb.pinch.d));
+      if(lb.s === 1){ lb.x = 0; lb.y = 0; }
+      lbClamp(); lbApply();
+    } else if(lb.s > 1 && lb.pan && e.touches.length === 1){
+      e.preventDefault();
+      lb.x = lb.pan.tx + (e.touches[0].clientX - lb.pan.x);
+      lb.y = lb.pan.ty + (e.touches[0].clientY - lb.pan.y);
+      lbClamp(); lbApply();
+    }
+  }, {passive:false});
+
+  tr.addEventListener('touchend', e => {
+    if(e.touches.length < 2) lb.pinch = null;
+    if(lb.s < 1.05) lbReset();
+    else if(e.touches.length === 1)
+      lb.pan = { x: e.touches[0].clientX, y: e.touches[0].clientY, tx: lb.x, ty: lb.y };
+    else lb.pan = null;
+  }, {passive:true});
+
+  tr.addEventListener('dblclick', lbToggleZoom);
+  document.addEventListener('keydown', e => {
+    if(!document.getElementById('lightbox').classList.contains('open')) return;
+    if(e.key === 'Escape') closeLightbox();
+    if(e.key === 'ArrowRight') lbGo(1);
+    if(e.key === 'ArrowLeft')  lbGo(-1);
+  });
+})();
+
+/* ---------- FICHE DÉTAIL (api_details.php) ---------- */
+let currentDetail = null;
+let pendingDetailId = null;
+const fmtPrice = a => (a.price === null || a.price === 0) ? t('price.unset') : (Math.round(a.price) + ' ' + (a.currency || '€'));
+const imgOrIcon = (src, icon) => src
+  ? `<img src="${escapeHtml(src)}" alt="" onerror="this.outerHTML='<span>${icon}</span>'">` : `<span>${icon}</span>`;
+
+function openDetail(i){ const a = lastAds[i]; if(a) openDetailById(a.id, a); }
+
+async function openDetailById(id, preview){
+  currentDetail = null;
+  const m = metaFor(preview && preview.category_slug);
+  document.getElementById('detailScroll').innerHTML =
+    `<div class="gallery">${preview ? `<div>${imgOrIcon(preview.image, m.icon)}</div>` : ''}</div>
+     <div class="dt-body">${preview ? `<h2>${escapeHtml(preview.title)}</h2><div class="dt-price">${fmtPrice(preview)}</div>` : ''}
+     <p class="subpage-loading">${t('list.loading_short')}</p></div>`;
+  document.getElementById('detailFooter').innerHTML = '';
+  document.getElementById('detail').classList.add('open');
+  document.getElementById('detailScroll').scrollTop = 0;
+  try{
+    const data = await apiFetch('/api_details.php?id=' + id);
+    if(!data.success) throw new Error(data.error || 'Erreur');
+    currentUser = data.logged_in ? (currentUser || {}) : null; // garde l'état de connexion synchronisé
+    currentDetail = data;
+    renderDetail(data);
+  }catch(e){
+    document.querySelector('#detailScroll .dt-body').innerHTML =
+      `<p class="subpage-loading">${escapeHtml(e.message || t('net.error'))}</p>`;
+  }
+}
+
+function renderDetail(d){
+  const a = d.annonce, m = metaFor(a.category_slug);
+  
+const gallery = a.images.length
+  ? a.images.map((im, i) => `<div onclick="openLightbox(${i})">${imgOrIcon(im.url, m.icon)}</div>`).join('')
+  : `<div>${m.icon}</div>`;
+  const date = new Date((a.created_at || '').replace(' ', 'T')).toLocaleDateString(LANG_LOCALE[LANG]);
+  const tags = [catName(a.category_slug, a.category_name), a.subcategory_name, a.condition, a.property_type, a.transaction,
+    a.seller_type === 'professionnel' ? t('detail.pro') : (a.seller_type ? t('detail.private') : null)]
+    .filter(Boolean).map(t => `<span class="dt-tag">${escapeHtml(t)}</span>`).join('');
+  const attrs = a.attributes.length
+    ? `<div class="dt-h" data-i18n="detail.specs">Caractéristiques</div>` +
+      a.attributes.map(x => `<div class="dt-attr"><span>${escapeHtml(x.name)}</span><span>${escapeHtml(x.value)}</span></div>`).join('') : '';
+
+  // Vendeur : le téléphone n'est présent dans la réponse que si connecté
+  let seller = `<div class="dt-h" data-i18n="detail.seller">Vendeur</div><div class="dt-seller"><b>${escapeHtml(d.seller.name || 'Vendeur')}</b>
+    <div style="color:var(--muted);font-size:12.5px;">📍 ${escapeHtml(d.seller.city || a.city || '')}</div>`;
+  if(d.contact){
+    seller += d.contact.telephone
+      ? `<a class="dt-phone" href="tel:${escapeHtml(d.contact.telephone)}">📞 ${escapeHtml(d.contact.telephone)}</a>`
+      : `<div style="color:var(--muted);font-size:13px;margin-top:8px;">${t('detail.no_phone')}</div>`;
+  } else {
+    seller += `<div class="dt-gate" style="margin-top:10px;">${t('detail.gate')}</div>`;
+  }
+  seller += `</div>`;
+
+  const sim = d.similar.length ? `<div class="dt-h" data-i18n="detail.similar">Annonces similaires</div><div class="dt-sim">` +
+    d.similar.map(s => `<div class="s" onclick="openDetailById(${s.id})">
+      <div class="im">${imgOrIcon(s.image, m.icon)}</div>
+      <div class="tx">${escapeHtml(s.title)}<div style="color:var(--orange-dark);font-weight:800;">${fmtPrice(s)}</div></div></div>`).join('') + `</div>` : '';
+
+  document.getElementById('detailScroll').innerHTML = `
+    <div class="gallery">${gallery}</div>
+    <div class="dt-body">
+      <h2>${escapeHtml(a.title)}</h2>
+      <div class="dt-price">${fmtPrice(a)}</div>
+      <div class="dt-meta">📍 ${escapeHtml(a.city || t('loc.unset'))} · ${date} · 👁 ${a.views} ${t('detail.views')} · ${t('detail.ref')} #${a.id}</div>
+      <div class="dt-tags">${tags}</div>
+      <div class="dt-h" data-i18n="detail.desc">Description</div>
+      <div class="dt-desc">${escapeHtml(a.description || t('detail.no_desc'))}</div>
+      ${attrs}${seller}${sim}
+    </div>`;
+
+  const f = document.getElementById('detailFooter');
+  if(d.is_owner){
+    f.innerHTML = `<button class="btn ghost" onclick="closeDetail();openAdEdit(${a.id})">${t('detail.edit')}</button>`;
+  } else if(d.logged_in && d.contact){
+    f.innerHTML = `<button class="btn" onclick="contactSeller()">${t('detail.send_msg')}</button>`;
+  } else {
+    f.innerHTML = `<button class="btn" onclick="pendingDetailId=${a.id};closeDetail();go('profil')">${t('detail.login_contact')}</button>
+  <button class="btn ghost small" style="margin-top:8px;" onclick="openRegister()" data-i18n="auth.create">Créer un compte</button>`;
+  }
+}
+
+function closeDetail(){ document.getElementById('detail').classList.remove('open'); }
+
+function contactSeller(){
+  const d = currentDetail;
+  if(!d || !d.logged_in || !d.contact) return;
+  openChat(d.annonce.id, d.contact.owner_id, /*standalone=*/true);
+}
+
+/* ================================================================
+   SOUS-PAGES NATIVES : Profil / Mes annonces / Messagerie / Espace pro
+   ================================================================ */
+let subpageMode = null; // 'profile' | 'ads-list' | 'ads-edit' | 'msg-list' | 'msg-chat' | 'pro'
+
+function openSubpage(title, mode){
+  document.getElementById('subpageTitle').textContent = title;
+  document.getElementById('subpageBody').innerHTML = '<p class="subpage-loading">'+t('list.loading_short')+'</p>';
+  subpageMode = mode;
+  document.getElementById('subpage').classList.add('open');
+}
+function closeSubpage(){
+  document.getElementById('subpage').classList.remove('open');
+  subpageMode = null;
+}
+// Le bouton retour revient à la liste quand on est dans un sous-écran (édition annonce / chat),
+// sinon il ferme complètement la sous-page.
+function subpageBack(){
+  if(subpageMode === 'ads-edit'){ openMesAnnonces(); }
+  else if(subpageMode === 'msg-chat'){ openMessagerie(); }
+  else { closeSubpage(); } // couvre aussi 'msg-chat-standalone' (retour vers la fiche annonce)
+}
+
+async function apiFetch(path, opts){
+  opts = opts || {};
+  opts.credentials = 'include';
+  opts.headers = Object.assign({'Content-Type':'application/json'}, opts.headers||{});
+  const res = await fetch(API_BASE + path, opts);
+  return res.json();
+}
+
+/* ---------- MON PROFIL ---------- */
+async function openProfileEdit(){
+  openSubpage(t('profile.mine'), 'profile');
+  try{
+    const data = await apiFetch('/api_profile.php');
+    if(!data.success || !data.logged_in){
+      document.getElementById('subpageBody').innerHTML = '<p class="subpage-loading">'+t('prof.load_fail')+'</p>';
+      return;
+    }
+    const u = data.user;
+    document.getElementById('subpageBody').innerHTML = `
+      <div class="field"><label>${t('prof.name')}</label><input value="${escapeHtml(u.nom)}" disabled></div>
+      <div class="field"><label>${t('auth.email')}</label><input id="pEmail" type="email" value="${escapeHtml(u.email)}"></div>
+      <div class="field"><label>${t('common.phone')}</label><input id="pTel" type="tel" value="${escapeHtml(u.telephone)}"></div>
+      <div class="field"><label>${t('prof.newpass')}</label><input id="pPass" type="password" placeholder="${t('prof.newpass_ph')}"></div>
+      <div id="pMsg" style="color:#dc2626;font-size:13px;margin-bottom:10px;"></div>
+      <button class="btn" onclick="submitProfileUpdate()">${t('common.save')}</button>
+    `;
+  }catch(e){
+    document.getElementById('subpageBody').innerHTML = '<p class="subpage-loading">'+t('net.error')+'</p>';
+  }
+}
+async function submitProfileUpdate(){
+  const email = document.getElementById('pEmail').value.trim();
+  const telephone = document.getElementById('pTel').value.trim();
+  const password = document.getElementById('pPass').value.trim();
+  const msgEl = document.getElementById('pMsg');
+  msgEl.textContent = '';
+  try{
+    const data = await apiFetch('/api_profile_update.php', {method:'POST', body: JSON.stringify({email, telephone, password})});
+    if(data.success){ msgEl.style.color = '#16a34a'; msgEl.textContent = t('prof.updated'); }
+    else { msgEl.style.color = '#dc2626'; msgEl.textContent = data.error || t('common.err'); }
+  }catch(e){ msgEl.style.color = '#dc2626'; msgEl.textContent = t('net.error'); }
+}
+
+/* ---------- MES ANNONCES ---------- */
+let myAdsCache = [];
+async function openMesAnnonces(){
+  openSubpage(t('profile.ads'), 'ads-list');
+  try{
+    const data = await apiFetch('/api_my_ads.php');
+    if(!data.success){ document.getElementById('subpageBody').innerHTML = '<p class="subpage-loading">'+t('common.load_err')+'</p>'; return; }
+    myAdsCache = data.ads;
+    if(!myAdsCache.length){
+      document.getElementById('subpageBody').innerHTML = '<p class="subpage-loading">'+t('ads.none')+'</p>';
+      return;
+    }
+    document.getElementById('subpageBody').innerHTML = myAdsCache.map((a,i)=>{
+      const m = metaFor(a.category_slug);
+      const priceTxt = a.price ? Math.round(a.price)+' '+(a.currency||'€') : t('price.unset');
+      const thumb = a.image ? `<img src="${a.image}" onerror="this.outerHTML='<span>${m.icon}</span>'">` : `<span>${m.icon}</span>`;
+      return `<div class="ad-card" onclick="openAdEdit(${a.id})">
+      ${newBadge(a)}
+        <div class="ad-thumb" style="background:${m.color}">${thumb}</div>
+        <div class="ad-info">
+          <div class="ad-title">${escapeHtml(a.title)}</div>
+          <div class="ad-price">${priceTxt}</div>
+          <div class="ad-loc">${escapeHtml(catName(a.category_slug, a.category_name) || t('ads.uncat'))}</div>
+        </div>
+      </div>`;
+    }).join('');
+  }catch(e){
+    document.getElementById('subpageBody').innerHTML = '<p class="subpage-loading">'+t('net.error')+'</p>';
+  }
+}
+
+let currentAdImages = [];
+let currentAdImagesToDelete = [];
+
+async function openAdEdit(id){
+  openSubpage(t('ads.edit_title'), 'ads-edit');
+  try{
+    const data = await apiFetch('/api_ad_detail.php?id=' + id);
+    if(!data.success){ document.getElementById('subpageBody').innerHTML = '<p class="subpage-loading">'+(data.error||t('common.err'))+'</p>'; return; }
+    const a = data.annonce;
+    currentAdImages = a.images || [];
+    currentAdImagesToDelete = [];
+    document.getElementById('subpageBody').innerHTML = `
+      <div id="adImgRow" class="img-thumb-row"></div>
+      <div class="field"><label>${t('ads.f_title')}</label><input id="adTitle" value="${escapeHtml(a.title)}"></div>
+      <div class="field"><label>${t('detail.desc')}</label><textarea id="adDesc" rows="3">${escapeHtml(a.description)}</textarea></div>
+      <div class="field"><label>${t('post.f_price')}</label><input id="adPrice" type="number" value="${escapeHtml(a.price)}"></div>
+      <div class="field"><label>${t('common.phone')}</label><input id="adTel" value="${escapeHtml(a.telephone)}"></div>
+      <div class="field"><label data-i18n="filters.city">Ville</label><input id="adCity" value="${escapeHtml(a.city)}"></div>
+      <div id="adMsg" style="color:#dc2626;font-size:13px;margin-bottom:10px;"></div>
+      <button class="btn" onclick="submitAdUpdate(${a.id})">${t('common.save')}</button>
+      <button class="btn danger" style="margin-top:10px;" onclick="confirmDeleteAd(${a.id})">${t('common.delete')}</button>
+      <button class="btn ghost" style="margin-top:10px;" onclick="openBoostExternal(${a.id})">${t('ads.boost')}</button>
+    `;
+    renderAdImgRow();
+  }catch(e){
+    document.getElementById('subpageBody').innerHTML = '<p class="subpage-loading">'+t('net.error')+'</p>';
+  }
+}
+function renderAdImgRow(){
+  const el = document.getElementById('adImgRow');
+  if(!el) return;
+  el.innerHTML = currentAdImages.map(img => `
+    <div class="img-thumb" data-id="${img.id}">
+      <img src="${img.url}">
+      <button class="rm" onclick="removeAdImage(${img.id})">✕</button>
+    </div>`).join('');
+}
+function removeAdImage(imgId){
+  currentAdImagesToDelete.push(imgId);
+  currentAdImages = currentAdImages.filter(i => i.id !== imgId);
+  renderAdImgRow();
+}
+async function submitAdUpdate(id){
+  const msgEl = document.getElementById('adMsg');
+  msgEl.textContent = '';
+  const payload = {
+    id: id,
+    title: document.getElementById('adTitle').value.trim(),
+    description: document.getElementById('adDesc').value.trim(),
+    price: document.getElementById('adPrice').value,
+    telephone: document.getElementById('adTel').value.trim(),
+    city: document.getElementById('adCity').value.trim(),
+    images_to_delete: currentAdImagesToDelete.join(','),
+  };
+  try{
+    const data = await apiFetch('/api_ad_update.php', {method:'POST', body: JSON.stringify(payload)});
+    if(data.success){ msgEl.style.color = '#16a34a'; msgEl.textContent = t('ads.updated'); }
+    else { msgEl.style.color = '#dc2626'; msgEl.textContent = data.error || t('common.err'); }
+  }catch(e){ msgEl.style.color = '#dc2626'; msgEl.textContent = t('net.error'); }
+}
+function confirmDeleteAd(id){
+  if(!confirm(t('ads.confirm_del'))) return;
+  deleteAd(id);
+}
+async function deleteAd(id){
+  try{
+    const data = await apiFetch('/api_ad_delete.php', {method:'POST', body: JSON.stringify({id})});
+    if(data.success){ openMesAnnonces(); } else { alert(data.error || t('ads.del_err')); }
+  }catch(e){ alert(t('net.error')); }
+}
+function openBoostExternal(id){
+  window.open(API_BASE + '/payment_gateway.php?annonce_id=' + id + '&source=app', '_system');
+}
+
+/* ---------- MA MESSAGERIE ---------- */
+let currentChat = { annonceId:null, otherUserId:null, conversationId:null };
+
+async function openMessagerie(){
+  openSubpage(t('profile.msgs'), 'msg-list');
+  try{
+    const data = await apiFetch('/api_conversations.php');
+    if(!data.success){ document.getElementById('subpageBody').innerHTML = '<p class="subpage-loading">'+t('common.load_err')+'</p>'; return; }
+    if(!data.conversations.length){
+      document.getElementById('subpageBody').innerHTML = '<p class="subpage-loading">'+t('msg.none')+'</p>';
+      return;
+    }
+    document.getElementById('subpageBody').innerHTML = data.conversations.map(c => {
+      const thumb = c.image ? `<img src="${c.image}">` : '💬';
+      const badge = c.unread_count > 0 ? `<span class="conv-badge">${c.unread_count}</span>` : '';
+      const date = new Date(c.updated_at).toLocaleDateString(LANG_LOCALE[LANG], {day:'2-digit', month:'2-digit'});
+      return `<div class="conv-row" onclick="openChat(${c.annonce_id}, ${c.other_user_id})">
+        <div class="conv-thumb">${thumb}</div>
+        <div class="conv-info">
+          <div class="conv-title">${escapeHtml(c.title)} ${badge}</div>
+          <div class="conv-date">${date}</div>
+        </div>
+      </div>`;
+    }).join('');
+  }catch(e){
+    document.getElementById('subpageBody').innerHTML = '<p class="subpage-loading">'+t('net.error')+'</p>';
+  }
+}
+
+async function openChat(annonceId, otherUserId, standalone){
+  openSubpage(t('msg.chat'), standalone ? 'msg-chat-standalone' : 'msg-chat');
+  currentChat = { annonceId, otherUserId, conversationId:null };
+  try{
+    const url = '/api_conversation_messages.php?annonce_id=' + annonceId + (otherUserId ? '&to=' + otherUserId : '');
+    const data = await apiFetch(url);
+    if(!data.success){ document.getElementById('subpageBody').innerHTML = '<p class="subpage-loading">'+(data.error||t('common.err'))+'</p>'; return; }
+    document.getElementById('subpageTitle').textContent = data.annonce_title || t('msg.chat');
+    currentChat.conversationId = data.conversation_id;
+    currentChat.otherUserId = data.other_user_id;
+
+    let ownerHtml = '';
+    if(data.other_user){
+      const ou = data.other_user;
+      let stars = '';
+      const rounded = ou.moyenne_note ? Math.round(ou.moyenne_note) : 0;
+      for(let i=1;i<=5;i++) stars += `<span onclick="rateOwner(${ou.id},${i})" style="cursor:pointer">${i<=rounded?'★':'☆'}</span>`;
+      ownerHtml = `<div id="chatOwner">
+        <b>${escapeHtml(ou.nom)} ${escapeHtml(ou.prenom)}</b><br>
+        📍 ${escapeHtml(ou.city||t('msg.city_unset'))} · ${t('msg.since',{d:ou.membre_depuis})}<br>
+        ${t('msg.active_ads',{n:ou.total_annonces})}
+        <div class="stars" id="starsRow">${stars}</div>
+        <span style="font-size:12px;color:var(--muted);">${ou.moyenne_note ? t('msg.rating',{avg:ou.moyenne_note,n:ou.nb_notes}) : t('msg.not_rated')}</span>
+      </div>`;
+    }
+    const msgsHtml = data.messages.map(m => `
+      <div class="msg ${m.type}">${escapeHtml(m.text)}<span class="mt">${new Date(m.time).toLocaleString(LANG_LOCALE[LANG],{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}</span></div>
+    `).join('') || '<p class="subpage-loading">'+t('msg.empty')+'</p>';
+
+    document.getElementById('subpageBody').innerHTML = `
+      <div id="chatWrap">
+        ${ownerHtml}
+        <div id="chatMessages">${msgsHtml}</div>
+        <form id="chatForm" onsubmit="return false;">
+          <textarea id="chatInput" placeholder="${t('msg.ph')}" ${!data.other_user_id ? 'disabled' : ''}></textarea>
+          <button onclick="submitChatMessage()" ${!data.other_user_id ? 'disabled' : ''}>➤</button>
+        </form>
+      </div>
+    `;
+    const msgsEl = document.getElementById('chatMessages');
+    if(msgsEl) msgsEl.scrollTop = msgsEl.scrollHeight;
+  }catch(e){
+    document.getElementById('subpageBody').innerHTML = '<p class="subpage-loading">'+t('net.error')+'</p>';
+  }
+}
+function escapeHtml(s){
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+async function submitChatMessage(){
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if(!text || !currentChat.otherUserId) return;
+  try{
+    const data = await apiFetch('/api_send_message.php', {method:'POST', body: JSON.stringify({
+      annonce_id: currentChat.annonceId,
+      recipient_id: currentChat.otherUserId,
+      conversation_id: currentChat.conversationId || 0,
+      message: text,
+    })});
+    if(data.success){
+      input.value = '';
+      currentChat.conversationId = data.conversation_id;
+      openChat(currentChat.annonceId, currentChat.otherUserId);
+    } else {
+      alert(data.error || t('msg.send_err'));
+    }
+  }catch(e){ alert(t('net.error')); }
+}
+async function rateOwner(userId, note){
+  try{
+    const data = await apiFetch('/api_rate_user.php', {method:'POST', body: JSON.stringify({user_id:userId, note})});
+    if(data.success){
+      openChat(currentChat.annonceId, currentChat.otherUserId);
+    } else { alert(data.error || t('common.err')); }
+  }catch(e){ alert(t('net.error')); }
+}
+
+/* ---------- MON ESPACE PRO ---------- */
+async function openEspacePro(){
+  openSubpage(t('profile.pro'), 'pro');
+  try{
+    const data = await apiFetch('/api_espace_pro.php');
+    if(!data.success){ document.getElementById('subpageBody').innerHTML = '<p class="subpage-loading">'+t('common.load_err')+'</p>'; return; }
+    if(!data.has_vitrine){
+      document.getElementById('subpageBody').innerHTML = `
+        <p class="subpage-loading">${t('pro.none')}</p>
+        <button class="btn" onclick="openProDemande()">${t('pro.create')}</button>`;
+      return;
+    }
+    const v = data.vitrine;
+    const jours = ['lundi','mardi','mercredi','jeudi','vendredi','samedi','dimanche'];
+    document.getElementById('subpageBody').innerHTML = `
+      <div class="menu-row" style="cursor:default;">
+        <span class="l">📍 ${t('pro.status')}</span><span>${tx('pst.'+v.statut, v.statut_label)}</span>
+      </div>
+      <div class="menu-row" style="cursor:default;">
+        <span class="l">💳 ${t('pro.plan')}</span><span>${tx('plan.'+v.plan, v.plan_label)}</span>
+      </div>
+      <div class="menu-row" style="cursor:default;">
+        <span class="l">📋 ${t('pro.ads')}</span><span>${v.nb_annonces} / ${v.quota_annonces}</span>
+      </div>
+      <div class="field"><label>${t('pro.f_name')}</label><input id="proNom" value="${escapeHtml(v.nom)}"></div>
+      <div class="field"><label>${t('pro.f_sector')}</label><input id="proSecteur" value="${escapeHtml(v.secteur)}"></div>
+      <div class="field"><label>${t('detail.desc')}</label><textarea id="proDesc" rows="3">${escapeHtml(v.description)}</textarea></div>
+      <div class="field"><label data-i18n="filters.city">Ville</label><input id="proVille" value="${escapeHtml(v.ville)}"></div>
+      <div class="field"><label>${t('pro.f_zip')}</label><input id="proCP" value="${escapeHtml(v.code_postal)}"></div>
+      <div class="field"><label>${t('pro.f_addr')}</label><input id="proAdresse" value="${escapeHtml(v.adresse)}"></div>
+      <div class="field"><label>${t('common.phone')}</label><input id="proTel" value="${escapeHtml(v.telephone)}"></div>
+      <div class="field"><label>${t('pro.f_email')}</label><input id="proEmail" value="${escapeHtml(v.email_public)}"></div>
+      <div class="field"><label>${t('pro.f_web')}</label><input id="proSite" value="${escapeHtml(v.site_web)}"></div>
+      <div class="field"><label>Facebook</label><input id="proFb" value="${escapeHtml(v.facebook)}"></div>
+      <div class="field"><label>Instagram</label><input id="proIg" value="${escapeHtml(v.instagram)}"></div>
+      <div class="field"><label>LinkedIn</label><input id="proLi" value="${escapeHtml(v.linkedin)}"></div>
+      <h3 class="section">${t('pro.hours')}</h3>
+      ${jours.map(j=>`<div class="field"><label>${t('day.'+j)}</label><input id="proH_${j}" value="${escapeHtml((v.horaires && v.horaires[j]) || '')}" placeholder="${t('pro.hours_ph')}"></div>`).join('')}
+      <div id="proMsg" style="color:#dc2626;font-size:13px;margin:6px 0;"></div>
+      <button class="btn" onclick="submitEspacePro()">${t('pro.save')}</button>
+      ${v.statut==='actif' ? `<button class="btn ghost" style="margin-top:10px;" onclick="window.open('${API_BASE}/entreprise.php?slug=${v.slug}','_system')">${t('pro.view')}</button>` : ''}
+    `;
+  }catch(e){
+    document.getElementById('subpageBody').innerHTML = '<p class="subpage-loading">'+t('net.error')+'</p>';
+  }
+}
+async function submitEspacePro(){
+  const jours = ['lundi','mardi','mercredi','jeudi','vendredi','samedi','dimanche'];
+  const horaires = {};
+  jours.forEach(j => horaires[j] = document.getElementById('proH_'+j).value.trim());
+  const payload = {
+    nom: document.getElementById('proNom').value.trim(),
+    secteur: document.getElementById('proSecteur').value.trim(),
+    description: document.getElementById('proDesc').value.trim(),
+    ville: document.getElementById('proVille').value.trim(),
+    code_postal: document.getElementById('proCP').value.trim(),
+    adresse: document.getElementById('proAdresse').value.trim(),
+    telephone: document.getElementById('proTel').value.trim(),
+    email_public: document.getElementById('proEmail').value.trim(),
+    site_web: document.getElementById('proSite').value.trim(),
+    facebook: document.getElementById('proFb').value.trim(),
+    instagram: document.getElementById('proIg').value.trim(),
+    linkedin: document.getElementById('proLi').value.trim(),
+    horaires: horaires,
+  };
+  const msgEl = document.getElementById('proMsg');
+  msgEl.textContent = '';
+  try{
+    const data = await apiFetch('/api_espace_pro_update.php', {method:'POST', body: JSON.stringify(payload)});
+    if(data.success){ msgEl.style.color = '#16a34a'; msgEl.textContent = t('pro.updated'); }
+    else { msgEl.style.color = '#dc2626'; msgEl.textContent = data.error || t('common.err'); }
+  }catch(e){ msgEl.style.color = '#dc2626'; msgEl.textContent = t('net.error'); }
+}
+
+/* ---------- DÉPOSER UNE ANNONCE ---------- */
+let dPhotos = []; // { blob, url }
+const D_MAX_PHOTOS = 8;
+
+function resetDeposer(){
+  dPhotos.forEach(p => URL.revokeObjectURL(p.url));
+  dPhotos = [];
+  const f = document.getElementById('deposer-form');
+  if(f) f.innerHTML = '';
+}
+
+function renderDeposerForm(){
+  const f = document.getElementById('deposer-form');
+  if(!f) return;
+  dPhotos.forEach(p => URL.revokeObjectURL(p.url));
+  dPhotos = [];
+  f.innerHTML = `
+    <h3 class="section" data-i18n="post.title">Déposer une annonce</h3>
+    <datalist id="dCityList"></datalist>
+    <input type="file" id="dPhotoInput" accept="image/*" multiple style="display:none">
+    <div class="upload" onclick="document.getElementById('dPhotoInput').click()">📷<br>${t('post.add_photos',{n:D_MAX_PHOTOS})}<br><small>${t('post.first_photo')}</small></div>
+    <div id="dThumbs" class="img-thumb-row"></div>
+    <div class="field"><label data-i18n="post.f_title">Titre *</label><input id="dTitle" maxlength="120" data-i18n-ph="ph.title" placeholder="Ex : Vélo électrique en très bon état"></div>
+    <div class="field"><label data-i18n="post.f_cat">Catégorie *</label><select id="dCat"></select></div>
+    <div class="field"><label data-i18n="post.f_price">Prix (DH)</label><input id="dPrice" type="number" inputmode="decimal" min="0" step="0.01" data-i18n-ph="ph.price" placeholder="Laisser vide si non précisé"></div>
+    <div class="field"><label data-i18n="post.f_desc">Description</label>
+  <button type="button" class="btn ghost small" id="dAiBtn" style="margin-bottom:8px;" onclick="generateDescription()">✨ Générer une description</button>
+  <textarea id="dDesc" rows="5" data-i18n-ph="ph.desc" placeholder="Décrivez votre bien : état, caractéristiques…"></textarea>
+  <div id="dAiHint" style="display:none;font-size:12.5px;line-height:1.45;margin-top:6px;border-radius:10px;padding:9px 11px;"></div></div>
+    <div class="field"><label data-i18n="post.f_city">Ville *</label><input id="dCity" list="dCityList" autocomplete="off" data-i18n-ph="ph.city" placeholder="Tapez une ville"></div>
+    <div class="field"><label data-i18n="post.f_tel">Téléphone (10 chiffres)</label><input id="dTel" type="tel" inputmode="numeric" maxlength="10" placeholder="0612345678"></div>
+    <div id="dMsg" style="color:#dc2626;font-size:13px;margin-bottom:10px;"></div>
+    <button class="btn" id="dBtn" onclick="submitAd()" data-i18n="post.publish">Publier l'annonce</button>
+  `;
+  document.getElementById('dPhotoInput').addEventListener('change', onPhotosPicked);
+  document.getElementById('dTel').addEventListener('input', function(){ this.value = this.value.replace(/\D/g,''); });
+  bindCityAutocomplete('dCity', 'dCityList');
+  fillDeposerCategories();
+  // Préremplit le téléphone depuis le profil
+  apiFetch('/api_profile.php').then(d => {
+    const t = document.getElementById('dTel');
+    if(d && d.user && d.user.telephone && t && !t.value) t.value = d.user.telephone;
+  }).catch(()=>{});
+}
+
+// Toutes les catégories renvoyées par l'API (plus de liste codée en dur)
+function fillDeposerCategories(){
+  const sel = document.getElementById('dCat');
+  if(!sel) return;
+  if(!categories.length){ sel.innerHTML = '<option value="">Chargement…</option>'; return; }
+  const prev = sel.value;
+  sel.innerHTML = '<option value="">'+t('post.choose')+'</option>' +
+    categories.map(c => `<option value="${c.id}">${escapeHtml(catLabel(c))}</option>`).join('');
+  if(prev) sel.value = prev;
+}
+
+async function onPhotosPicked(e){
+  const files = Array.from(e.target.files || []);
+  e.target.value = '';
+  const msg = document.getElementById('dMsg');
+  msg.textContent = '';
+  for(const file of files){
+    if(dPhotos.length >= D_MAX_PHOTOS){ msg.textContent = `Maximum ${D_MAX_PHOTOS} photos.`; break; }
+    if(!file.type.startsWith('image/')) continue;
+    try{
+      const blob = await downscaleImage(file, 1600, 0.82);
+      dPhotos.push({ blob, url: URL.createObjectURL(blob) });
+    }catch(err){ msg.textContent = 'Photo illisible : ' + file.name; }
+  }
+  renderDPhotos();
+}
+
+// Réduit la photo (max 1600 px, JPEG) : envoi plus rapide, moins de risque de dépasser les limites du serveur
+function downscaleImage(file, maxSide, quality){
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, maxSide / Math.max(img.width, img.height));
+      const w = Math.round(img.width * scale), h = Math.round(img.height * scale);
+      const c = document.createElement('canvas'); c.width = w; c.height = h;
+      c.getContext('2d').drawImage(img, 0, 0, w, h);
+      URL.revokeObjectURL(url);
+      c.toBlob(b => b ? resolve(b) : reject(new Error('toBlob')), 'image/jpeg', quality);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('load')); };
+    img.src = url;
+  });
+}
+
+function renderDPhotos(){
+  const el = document.getElementById('dThumbs');
+  if(!el) return;
+  el.innerHTML = dPhotos.map((p,i) =>
+    `<div class="img-thumb"><img src="${p.url}"><button class="rm" onclick="removeDPhoto(${i})">✕</button></div>`).join('');
+}
+function removeDPhoto(i){
+  const p = dPhotos.splice(i,1)[0];
+  if(p) URL.revokeObjectURL(p.url);
+  renderDPhotos();
+}
+
+const blobToB64 = b => new Promise((res, rej) => {
+  const r = new FileReader();
+  r.onload = () => res(r.result.split(',')[1]); r.onerror = rej;
+  r.readAsDataURL(b);
+});
+
+let aiState = { sig:'', text:'', busy:false };
+
+const AI_TXT = {
+  fr:{need:"💡 Saisissez d'abord un titre (et si possible vos photos).",
+      busy:"✨ Rédaction en cours…", btn:"✨ Générer une description", again:"✨ Proposer une autre version",
+      ai:"✨ Proposition rédigée à partir de votre titre et de vos photos. Relisez-la et adaptez-la avant de publier.",
+      tpl:"📝 Modèle de description. Ajoutez les détails de votre bien avant de publier.",
+      todo:"À compléter : ", replace:"Remplacer la description actuelle ?"},
+  en:{need:"💡 Enter a title first (and your photos if possible).",
+      busy:"✨ Writing…", btn:"✨ Generate a description", again:"✨ Suggest another version",
+      ai:"✨ Suggestion written from your title and photos. Please review and adapt it before publishing.",
+      tpl:"📝 Description template. Add your item's details before publishing.",
+      todo:"To complete: ", replace:"Replace the current description?"},
+  ar:{need:"💡 اكتب العنوان أولاً (والصور إن أمكن).",
+      busy:"✨ جارٍ الكتابة…", btn:"✨ إنشاء وصف", again:"✨ اقتراح صيغة أخرى",
+      ai:"✨ اقتراح مكتوب انطلاقاً من عنوانك وصورك. راجعه وعدّله قبل النشر.",
+      tpl:"📝 نموذج وصف. أضف تفاصيل منتجك قبل النشر.",
+      todo:"للإكمال: ", replace:"استبدال الوصف الحالي؟"},
+  es:{need:"💡 Escriba primero un título (y sus fotos si es posible).",
+      busy:"✨ Redactando…", btn:"✨ Generar una descripción", again:"✨ Proponer otra versión",
+      ai:"✨ Propuesta redactada a partir de su título y fotos. Revísela y adáptela antes de publicar.",
+      tpl:"📝 Modelo de descripción. Añada los detalles de su artículo antes de publicar.",
+      todo:"Por completar: ", replace:"¿Reemplazar la descripción actual?"}
+};
+const aiT = () => AI_TXT[LANG] || AI_TXT.fr;
+
+function showAiHint(html, kind){
+  const el = document.getElementById('dAiHint'); if(!el) return;
+  if(!html){ el.style.display = 'none'; return; }
+  el.style.display = 'block';
+  const ok = kind === 'ok';
+  el.style.background = ok ? '#fff7ed' : '#f3f4f6';
+  el.style.color      = ok ? '#7c2d12' : '#555';
+  el.style.border     = '1px solid ' + (ok ? '#fed7aa' : '#e5e7eb');
+  el.innerHTML = html;
+}
+
 async function generateDescription(){
   const ta = document.getElementById('dDesc'), btn = document.getElementById('dAiBtn');
   if(!ta || aiState.busy) return;
@@ -40,3 +1311,615 @@ async function generateDescription(){
   }
   btn.disabled = false; aiState.busy = false;
 }
+
+async function submitAd(){
+  const v = id => document.getElementById(id).value.trim();
+  const msg = document.getElementById('dMsg');
+  msg.textContent = '';
+  const title = v('dTitle'), cat = v('dCat'), city = v('dCity'), tel = v('dTel'), price = v('dPrice');
+  if(title.length < 3) return msg.textContent = t('post.err_title');
+  if(!cat) return msg.textContent = t('post.err_cat');
+  if(!city) return msg.textContent = t('post.err_city');
+  if(tel !== '' && !/^\d{10}$/.test(tel)) return msg.textContent = t('post.err_tel');
+  if(price !== '' && (isNaN(price) || Number(price) < 0)) return msg.textContent = t('post.err_price');
+
+  const btn = document.getElementById('dBtn');
+  btn.disabled = true; btn.textContent = t('post.publishing');
+
+  const fd = new FormData();
+  fd.append('title', title);
+  fd.append('category_id', cat);
+  fd.append('description', v('dDesc'));
+  fd.append('price', price);
+  fd.append('city', city);
+  fd.append('telephone', tel);
+  dPhotos.forEach((p,i) => fd.append('photos[]', p.blob, `photo_${i+1}.jpg`));
+
+  try{
+    const res = await fetch(API_BASE + '/api_ad_create.php', { method:'POST', credentials:'include', body: fd });
+    const data = await res.json();
+    if(data.success){
+      dPhotos.forEach(p => URL.revokeObjectURL(p.url));
+      dPhotos = [];
+      const live = data.status === 'active' || data.status === 'approved';
+      document.getElementById('deposer-form').innerHTML = `
+        <div id="dSuccess" style="text-align:center;padding:24px 4px;">
+          <div style="font-size:46px;">✅</div>
+          <h3 style="margin:10px 0 8px;">${live ? t('post.published') : t('post.sent')}</h3>
+          <p style="color:#555;font-size:14.5px;line-height:1.5;">${escapeHtml(data.message || '')}</p>
+          <button class="btn" style="margin-top:18px;" onclick="openMesAnnonces()">${t('post.view_mine')}</button>
+          <button class="btn ghost" style="margin-top:10px;" onclick="renderDeposerForm()">${t('post.another')}</button>
+        </div>`;
+      loadListings(null, 'homeList');
+    } else {
+      msg.textContent = data.error || "Erreur lors de la publication.";
+      if(data.code === 'not_logged_in' || data.error === 'Non connecté.'){ currentUser = null; updateDeposerGate(); }
+      btn.disabled = false; btn.textContent = t('post.publish');
+    }
+  }catch(e){
+    msg.textContent = 'Erreur réseau. Vérifiez votre connexion et réessayez.';
+    btn.disabled = false; btn.textContent = t('post.publish');
+  }
+}
+
+/* ---------- AUTOCOMPLÉTION VILLE (API gouvernementale, comme sur le site) ---------- */
+let cityTimer = null;
+function bindCityAutocomplete(inputId, listId){
+  const inp = document.getElementById(inputId);
+  if(!inp) return;
+  const old = document.getElementById(listId); if(old) old.remove(); // le datalist n'est plus utilisé
+  inp.removeAttribute('list');
+
+  const box = document.createElement('div');
+  box.style.cssText = 'display:none;background:#fff;border:1px solid var(--border);border-radius:12px;' +
+    'margin-top:4px;max-height:220px;overflow-y:auto;box-shadow:0 6px 16px rgba(0,0,0,.08);';
+  inp.insertAdjacentElement('afterend', box);
+
+  inp.addEventListener('input', () => {
+    clearTimeout(cityTimer);
+    const v = inp.value.trim();
+    if(v.length < 2){ box.style.display = 'none'; return; }
+    cityTimer = setTimeout(async () => {
+      try{
+        let names;
+        if(API_BASE.endsWith('.ma')){
+          const r = await fetch(API_BASE + '/get_cities.php?q=' + encodeURIComponent(v) + '&limit=10');
+          const d = await r.json();
+          names = (Array.isArray(d) ? d : []).map(c => typeof c === 'string' ? c : (c.nom || c.name || ''));
+        } else {
+          const r = await fetch('https://geo.api.gouv.fr/communes?nom=' + encodeURIComponent(v) + '&fields=nom&boost=population&limit=10');
+          names = (await r.json()).map(c => c.nom);
+        }
+        names = names.filter(Boolean);
+        box.innerHTML = names.map(n =>
+          `<div class="cs" style="padding:12px 14px;font-size:14.5px;border-bottom:1px solid var(--border);cursor:pointer;">${escapeHtml(n)}</div>`).join('');
+        box.style.display = names.length ? 'block' : 'none';
+      }catch(e){ box.style.display = 'none'; }
+    }, 250);
+  });
+
+  box.addEventListener('pointerdown', e => {
+    const it = e.target.closest('.cs'); if(!it) return;
+    e.preventDefault();
+    inp.value = it.textContent;
+    box.style.display = 'none';
+  });
+  inp.addEventListener('blur', () => setTimeout(() => box.style.display = 'none', 150));
+}
+
+/* ---------- INSCRIPTION (nouvel adhérent) ---------- */
+function openRegister(){
+  openSubpage(t('auth.create'), 'register');
+  document.getElementById('subpageBody').innerHTML = `
+    <datalist id="rCityList"></datalist>
+    <div class="field"><label data-i18n="reg.nom">Nom *</label><input id="rNom" data-i18n-ph="reg.ph_nom" placeholder="Nom"></div>
+    <div class="field"><label data-i18n="reg.prenom">Prénom</label><input id="rPrenom" data-i18n-ph="reg.ph_prenom" placeholder="Prénom"></div>
+    <div class="field"><label data-i18n="reg.email">Email *</label><input id="rEmail" type="email" placeholder="vous@exemple.com"></div>
+    <div class="field"><label data-i18n="reg.pass">Mot de passe * (8 caractères min.)</label><input id="rPass" type="password"></div>
+    <div class="field"><label data-i18n="reg.pass2">Confirmer le mot de passe *</label><input id="rPass2" type="password"></div>
+    <div class="field"><label data-i18n="post.f_tel">Téléphone (10 chiffres)</label><input id="rTel" type="tel" inputmode="numeric" maxlength="10" placeholder="0612345678"></div>
+    <div class="field"><label data-i18n="post.f_city">Ville *</label><input id="rCity" list="rCityList" autocomplete="off" data-i18n-ph="ph.city" placeholder="Tapez une ville"></div>
+    <label style="display:flex;gap:10px;align-items:flex-start;font-size:13px;color:#555;margin:6px 0 14px;">
+      <input type="checkbox" id="rTerms" style="margin-top:3px;">
+      <span>${t('reg.terms_pre')}<a href="#" onclick="window.open(API_BASE+'/terms.php','_system');return false;">${t('reg.terms_link')}</a>${t('reg.terms_mid')}<a href="#" onclick="window.open(API_BASE+'/privacy.php','_system');return false;">${t('reg.privacy_link')}</a>${t('reg.terms_post')}</span>
+    </label>
+    <div id="rMsg" style="color:#dc2626;font-size:13px;margin-bottom:10px;"></div>
+    <button class="btn" id="rBtn" onclick="submitRegister()" data-i18n="reg.submit">S'inscrire</button>
+    <button class="btn ghost" style="margin-top:10px;" onclick="closeSubpage();closeDetail();go('profil')" data-i18n="reg.have_account">J'ai déjà un compte</button>
+  `;
+  document.getElementById('rTel').addEventListener('input', function(){ this.value = this.value.replace(/\D/g,''); });
+  bindCityAutocomplete('rCity', 'rCityList');
+}
+
+async function submitRegister(){
+  const v = id => document.getElementById(id).value.trim();
+  const nom = v('rNom'), email = v('rEmail'), city = v('rCity'), tel = v('rTel');
+  const pass = document.getElementById('rPass').value, pass2 = document.getElementById('rPass2').value;
+  const msg = document.getElementById('rMsg');
+  msg.textContent = '';
+
+  if(nom.length < 2) return msg.textContent = t('reg.err_name');
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return msg.textContent = t('err.email');
+  if(pass.length < 8) return msg.textContent = t('err.pass8');
+  if(pass !== pass2) return msg.textContent = t('err.pass_match');
+  if(tel !== '' && !/^\d{10}$/.test(tel)) return msg.textContent = t('post.err_tel');
+  if(city === '') return msg.textContent = t('post.err_city');
+  if(!document.getElementById('rTerms').checked) return msg.textContent = t('err.terms');
+
+  const btn = document.getElementById('rBtn');
+  btn.disabled = true; btn.textContent = t('reg.signing');
+  try{
+    const data = await apiFetch('/api_register.php', {method:'POST', body: JSON.stringify({
+      nom, prenom: v('rPrenom'), email, password: pass, confirm_password: pass2,
+      telephone: tel, city, terms: 1, website: ''
+    })});
+    if(data.success){
+      document.getElementById('subpageBody').innerHTML = `
+        <div style="text-align:center;padding:24px 4px;">
+          <div style="font-size:46px;">📧</div>
+          <h3 style="margin:10px 0 8px;" data-i18n="reg.done_t">Compte créé !</h3>
+          <p style="color:#555;font-size:14.5px;line-height:1.5;">${t('reg.done_body',{email:'<b>'+escapeHtml(email)+'</b>'})}</p>
+          ${data.email_sent ? '' : '<p style="color:#b45309;font-size:13px;">'+t('reg.email_warn')+'</p>'}
+          <button class="btn" style="margin-top:18px;" onclick="closeSubpage();closeDetail();go('profil')" data-i18n="reg.go_login">Aller à la connexion</button>
+        </div>`;
+    } else {
+      msg.textContent = data.error || t('reg.fail');
+      btn.disabled = false; btn.textContent = t('reg.submit');
+    }
+  }catch(e){
+    msg.textContent = t('net.error');
+    btn.disabled = false; btn.textContent = t('reg.submit');
+  }
+}
+
+/* ---------- DEMANDE DE VITRINE PRO ("Créer ma vitrine") ---------- */
+function openProDemande(){
+  openSubpage(t('pd.title'), 'pro-demande');
+  const secteurs = ['Agence immobilière','Garage / Concession auto','Artisan / BTP','Commerce','Services aux entreprises','Location saisonnière','Autre'];
+  document.getElementById('subpageBody').innerHTML = `
+    <datalist id="pCityList"></datalist>
+    <p style="color:#555;font-size:14px;line-height:1.5;margin:0 0 16px;">${t('pd.intro')}</p>
+    <div class="field"><label>${t('pd.f_ent')}</label><input id="pEnt"></div>
+    <div class="field"><label>${t('pro.f_sector')}</label>
+      <select id="pSect"><option value="">${t('post.choose')}</option>${secteurs.map((s,i)=>`<option value="${s}">${t('sect.'+i)}</option>`).join('')}</select></div>
+    <div class="field"><label>${t('pd.f_contact')}</label><input id="pContact" value="${escapeHtml((currentUser && currentUser.nom) || '')}"></div>
+    <div class="field"><label data-i18n="filters.city">Ville</label><input id="pVille" list="pCityList" autocomplete="off"></div>
+    <div class="field"><label>${t('pd.f_email')}</label><input id="pEmail" type="email" value="${escapeHtml((currentUser && currentUser.email) || '')}"></div>
+    <div class="field"><label>${t('common.phone')}</label><input id="pTel" type="tel"></div>
+    <div class="field"><label>${t('pd.f_plan')}</label>
+      <select id="pPlan">
+        <option value="gratuit">${t('pd.p_gratuit')}</option>
+        <option value="pro" selected>${t('pd.p_pro')}</option>
+        <option value="business">${t('pd.p_business')}</option>
+        <option value="entreprise">${t('pd.p_entreprise')}</option>
+      </select></div>
+    <div class="field"><label>${t('pd.f_vol')}</label><input id="pVol" placeholder="${t('pd.vol_ph')}"></div>
+    <div class="field"><label>${t('pd.f_msg')}</label><textarea id="pMessage" rows="3"></textarea></div>
+    <div id="pMsg" style="color:#dc2626;font-size:13px;margin-bottom:10px;"></div>
+    <button class="btn" id="pBtn" onclick="submitProDemande()">${t('pd.send')}</button>
+  `;
+  bindCityAutocomplete('pVille', 'pCityList');
+}
+
+async function submitProDemande(){
+  const v = id => document.getElementById(id).value.trim();
+  const msg = document.getElementById('pMsg');
+  msg.textContent = '';
+  if(!v('pEnt') || !v('pContact')) return msg.textContent = t('pd.err_req');
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v('pEmail'))) return msg.textContent = t('err.email');
+
+  const btn = document.getElementById('pBtn');
+  btn.disabled = true; btn.textContent = t('pd.sending');
+  try{
+    const data = await apiFetch('/api_pro_demande.php', {method:'POST', body: JSON.stringify({
+      entreprise: v('pEnt'), secteur: v('pSect'), contact: v('pContact'), ville: v('pVille'),
+      email: v('pEmail'), telephone: v('pTel'), plan: v('pPlan'), volume: v('pVol'), message: v('pMessage')
+    })});
+    if(data.success){
+      document.getElementById('subpageBody').innerHTML = `
+        <div style="text-align:center;padding:24px 4px;">
+          <div style="font-size:46px;">✅</div>
+          <h3 style="margin:10px 0 8px;">${t('pd.done_t')}</h3>
+          <p style="color:#555;font-size:14.5px;line-height:1.5;">${t('pd.done_body')}</p>
+          <button class="btn" style="margin-top:18px;" onclick="closeSubpage()">${t('common.close')}</button>
+        </div>`;
+    } else {
+      msg.textContent = data.error || t('pd.fail');
+      btn.disabled = false; btn.textContent = t('pd.send');
+    }
+  }catch(e){
+    msg.textContent = t('net.error');
+    btn.disabled = false; btn.textContent = t('pd.send');
+  }
+}
+
+/* ---------- FILTRES DE RECHERCHE ---------- */
+const searchFilters = { q:'', city:'', priceMin:'', priceMax:'', type:'', subId:null, subLabel:'' };
+
+function buildUrl(targetId, page, categoryId){
+  if(targetId === 'homeList'){
+    let u = API_BASE + '/api_listings.php?page=' + page;
+    if(categoryId) u += '&category_id=' + categoryId;
+    return u;
+  }
+  const f = searchFilters, p = new URLSearchParams({ page });
+  if(categoryId)  p.set('category_id', categoryId);
+  if(f.subId)     p.set('subcategory_id', f.subId);
+  if(f.q)         p.set('q', f.q);
+  if(f.city)      p.set('city', f.city);
+  if(f.priceMin !== '') p.set('price_min', f.priceMin);
+  if(f.priceMax !== '') p.set('price_max', f.priceMax);
+  if(f.type && categoryId === 4) p.set('type', f.type);
+  return API_BASE + '/api_listings.php?' + p.toString();  // (ex-api_search.php, désormais géré par api_listings.php)
+}
+
+function runSearch(){
+  renderFilterSummary();
+  loadListings(currentCategoryId, 'fullList');
+}
+
+function renderFilterSummary(){
+  const f = searchFilters, parts = [];
+  if(f.q) parts.push('« ' + f.q + ' »');
+  if(f.subLabel) parts.push(f.subLabel);
+  if(f.city) parts.push('📍 ' + f.city);
+  if(f.priceMin !== '' || f.priceMax !== '') parts.push((f.priceMin || 0) + ' – ' + (f.priceMax || '∞'));
+  if(f.type) parts.push(f.type === 'offer' ? t('filters.sell') : t('filters.seek'));
+  const n = (f.subId?1:0) + (f.city?1:0) + ((f.priceMin!==''||f.priceMax!=='')?1:0) + (f.type?1:0);
+  document.getElementById('fltBadge').textContent = n ? ' (' + n + ')' : '';
+  document.getElementById('fltSummary').innerHTML = parts.length
+    ? escapeHtml(parts.join(' · ')) + ' — <a href="#" style="color:var(--orange-dark);font-weight:600;" onclick="resetSearchFilters(true);return false;">'+t('list.clear')+'</a>'
+    : '';
+}
+
+function resetSearchFilters(runNow){
+  Object.assign(searchFilters, { q:'', city:'', priceMin:'', priceMax:'', type:'', subId:null, subLabel:'' });
+  const q = document.getElementById('fltQ'); if(q) q.value = '';
+  if(runNow){ runSearch(); } else { renderFilterSummary(); }
+}
+
+document.getElementById('fltQ').addEventListener('keydown', e => {
+  if(e.key === 'Enter'){ searchFilters.q = e.target.value.trim(); runSearch(); }
+});
+document.getElementById('homeQ').addEventListener('keydown', e => {
+  if(e.key === 'Enter'){
+    searchFilters.q = e.target.value.trim();
+    document.getElementById('fltQ').value = searchFilters.q;
+    runSearch(); go('annonces');
+  }
+});
+function doSearch(){
+  searchFilters.q = document.getElementById('fltQ').value.trim();
+  runSearch();
+}
+function doHomeSearch(){
+  const v = document.getElementById('homeQ').value.trim();
+  searchFilters.q = v;
+  document.getElementById('fltQ').value = v;
+  runSearch(); go('annonces');
+}
+
+/* Sous-page "Filtres" */
+let fltTree = [], fltIndex = {}, fltStack = [], fltPending = { id:null, label:'' };
+
+async function openFilters(){
+  openSubpage(t('filters.title'), 'filters');
+  const f = searchFilters;
+  fltPending = { id: f.subId, label: f.subLabel };
+  fltStack = []; fltTree = []; fltIndex = {};
+  fltCat = currentCategoryId;
+  const catOpts = '<option value="">'+t('filters.all_cats')+'</option>' +
+    categories.map(c => `<option value="${c.id}" ${c.id===fltCat?'selected':''}>${escapeHtml(metaFor(c.slug).icon + ' ' + catLabel(c))}</option>`).join('');
+  document.getElementById('subpageBody').innerHTML = `
+    <div class="field"><label data-i18n="filters.cat">Catégorie</label>
+      <select id="fltCat" onchange="onFltCatChange(this.value)">${catOpts}</select></div>
+    <div id="fltSubWrap"></div>
+    <datalist id="fCityList"></datalist>
+    <div class="field" style="margin-top:14px;"><label data-i18n="filters.city">Ville</label>
+      <input id="fltCity" list="fCityList" autocomplete="off" data-i18n-ph="filters.all_cities" placeholder="Toutes les villes" value="${escapeHtml(f.city)}"></div>
+    <div class="field"><label data-i18n="filters.pmin">Prix minimum</label>
+      <input id="fltPmin" type="number" inputmode="decimal" min="0" value="${escapeHtml(f.priceMin)}"></div>
+    <div class="field"><label data-i18n="filters.pmax">Prix maximum</label>
+      <input id="fltPmax" type="number" inputmode="decimal" min="0" value="${escapeHtml(f.priceMax)}"></div>
+    <div id="fltTypeWrap"></div>
+    <button class="btn" onclick="applySearchFilters()">${t('filters.show')}</button>
+    <button class="btn ghost" style="margin-top:10px;" onclick="resetSearchFilters(true);closeSubpage();">${t('filters.reset')}</button>
+  `;
+  bindAdCityAutocomplete('fltCity', 'fCityList');
+  renderFltType();
+  await loadFltTree();
+}
+
+let fltCat = null;
+
+function renderFltType(){
+  const w = document.getElementById('fltTypeWrap'); if(!w) return;
+  w.innerHTML = fltCat === 4 ? `<div class="field"><label data-i18n="filters.type">Type d'annonce</label>
+    <select id="fltType">
+      <option value="">Toutes</option>
+      <option value="offer" ${searchFilters.type==='offer'?'selected':''}>${t('filters.sell')}</option>
+      <option value="demand" ${searchFilters.type==='demand'?'selected':''}>${t('filters.seek')}</option>
+    </select></div>` : '';
+}
+
+async function loadFltTree(){
+  const w = document.getElementById('fltSubWrap'); if(!w) return;
+  fltStack = []; fltTree = []; fltIndex = {};
+  if(!fltCat){ w.innerHTML = ''; return; }
+  w.innerHTML = '<h3 class="section" data-i18n="filters.sub">Sous-catégorie</h3><div id="fltSub"><p class="subpage-loading">Chargement…</p></div>';
+  try{
+    const d = await apiFetch('/api_filters.php?category_id=' + fltCat);
+    fltTree = d.success ? d.tree : [];
+    (function idx(nodes){ nodes.forEach(n => { fltIndex[n.id] = n; idx(n.children); }); })(fltTree);
+  }catch(e){ fltTree = []; }
+  renderFltSub();
+}
+
+function onFltCatChange(v){
+  fltCat = v ? parseInt(v, 10) : null;
+  fltPending = { id:null, label:'' };
+  renderFltType();
+  loadFltTree();
+}
+
+function renderFltSub(){
+  const el = document.getElementById('fltSub'); if(!el) return;
+  const cur = fltStack.length ? fltStack[fltStack.length - 1] : null;
+  const nodes = cur ? cur.children : fltTree;
+  const row = (label, click, sel, arrow) =>
+    `<div class="menu-row" style="${sel?'border-color:var(--orange);':''}" onclick="${click}">
+       <span class="l">${sel?'✅ ':''}${escapeHtml(label)}</span><span>${arrow?'›':''}</span></div>`;
+  let h = '';
+  if(cur){
+    h += `<div class="chip" style="display:inline-block;margin-bottom:10px;" onclick="fltUp()">← ${escapeHtml(cur.name)}</div>`;
+    h += row('Tout « ' + cur.name + ' »', `fltPick(${cur.id})`, fltPending.id === cur.id, false);
+  } else {
+    h += row(t('filters.all_subs'), 'fltPick(0)', !fltPending.id, false);
+  }
+  if(!nodes.length && !cur) h += '<p class="subpage-loading">Aucune sous-catégorie.</p>';
+  nodes.forEach(n => {
+    h += row(n.name, n.children.length ? `fltOpen(${n.id})` : `fltPick(${n.id})`, fltPending.id === n.id, n.children.length > 0);
+  });
+  el.innerHTML = h;
+}
+function fltOpen(id){ fltStack.push(fltIndex[id]); renderFltSub(); }
+function fltUp(){ fltStack.pop(); renderFltSub(); }
+function fltPick(id){
+  fltPending = id ? { id, label: fltIndex[id].name } : { id:null, label:'' };
+  renderFltSub();
+}
+
+function applySearchFilters(){
+  const v = id => { const e = document.getElementById(id); return e ? e.value.trim() : ''; };
+  currentCategoryId = fltCat;
+  Object.assign(searchFilters, {
+    subId: fltCat ? fltPending.id : null,
+    subLabel: fltCat ? fltPending.label : '',
+    city: v('fltCity'), priceMin: v('fltPmin'), priceMax: v('fltPmax'),
+    type: fltCat === 4 ? v('fltType') : '',
+  });
+  closeSubpage();
+  renderChips();
+  runSearch();
+}
+
+/* Autocomplétion des villes présentes dans les annonces */
+let adCityTimer = null;
+function bindAdCityAutocomplete(inputId, listId){
+  const inp = document.getElementById(inputId), dl = document.getElementById(listId);
+  if(!inp || !dl) return;
+  inp.addEventListener('input', () => {
+    clearTimeout(adCityTimer);
+    const v = inp.value.trim();
+    if(v.length < 2){ dl.innerHTML = ''; return; }
+    adCityTimer = setTimeout(async () => {
+      try{
+        const r = await fetch(API_BASE + '/api_cities.php?q=' + encodeURIComponent(v));
+        const d = await r.json();
+        dl.innerHTML = (d.cities || []).map(c => `<option value="${escapeHtml(c)}">`).join('');
+      }catch(e){}
+    }, 250);
+  });
+}
+
+/* ---------- MOT DE PASSE OUBLIÉ ---------- */
+function openForgotPassword(){
+  openSubpage('Mot de passe oublié', 'forgot');
+  const prefill = (document.getElementById('loginEmail') || {}).value || '';
+  document.getElementById('subpageBody').innerHTML = `
+    <p style="color:#555;font-size:14px;line-height:1.5;margin:0 0 16px;">Entrez votre adresse email : nous vous enverrons un lien de réinitialisation valable <b>1 heure</b>.</p>
+    <div class="field"><label>Adresse email</label><input id="fEmail" type="email" placeholder="vous@exemple.com" value="${escapeHtml(prefill)}"></div>
+    <div id="fMsg" style="color:#dc2626;font-size:13px;margin-bottom:10px;"></div>
+    <button class="btn" id="fBtn" onclick="submitForgot()">Envoyer le lien</button>
+    <button class="btn ghost" style="margin-top:10px;" onclick="openResetPassword()">J'ai déjà reçu un lien</button>
+  `;
+}
+
+async function submitForgot(){
+  const email = document.getElementById('fEmail').value.trim();
+  const msg = document.getElementById('fMsg');
+  msg.style.color = '#dc2626'; msg.textContent = '';
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return msg.textContent = t('err.email');
+
+  const btn = document.getElementById('fBtn');
+  btn.disabled = true; btn.textContent = t('pd.sending');
+  try{
+    const data = await apiFetch('/api_forgot_password.php', {method:'POST', body: JSON.stringify({email})});
+    if(data.success){
+      document.getElementById('subpageBody').innerHTML = `
+        <div style="text-align:center;padding:24px 4px;">
+          <div style="font-size:46px;">📧</div>
+          <h3 style="margin:10px 0 8px;">Vérifiez vos emails</h3>
+          <p style="color:#555;font-size:14.5px;line-height:1.5;">${escapeHtml(data.message)}<br><br><b>Pensez à vérifier votre dossier spam.</b></p>
+          <button class="btn" style="margin-top:18px;" onclick="openResetPassword()">Saisir le lien reçu</button>
+          <button class="btn ghost" style="margin-top:10px;" onclick="closeSubpage()">Retour à la connexion</button>
+        </div>`;
+    } else {
+      msg.textContent = data.error || t('pd.fail');
+      btn.disabled = false; btn.textContent = 'Envoyer le lien';
+    }
+  }catch(e){
+    msg.textContent = t('net.error');
+    btn.disabled = false; btn.textContent = 'Envoyer le lien';
+  }
+}
+
+function openResetPassword(){
+  openSubpage('Nouveau mot de passe', 'reset');
+  document.getElementById('subpageBody').innerHTML = `
+    <p style="color:#555;font-size:14px;line-height:1.5;margin:0 0 16px;">Collez ici le lien reçu par email (ou son code), puis choisissez un nouveau mot de passe.</p>
+    <div class="field"><label>Lien ou code reçu par email *</label><textarea id="rTok" rows="2" placeholder="https://www.ozannonces.ma/...token=..."></textarea></div>
+    <div class="field"><label>Nouveau mot de passe * (8 caractères min.)</label><input id="rNewPass" type="password"></div>
+    <div class="field"><label>Confirmer le mot de passe *</label><input id="rNewPass2" type="password"></div>
+    <div id="rsMsg" style="color:#dc2626;font-size:13px;margin-bottom:10px;"></div>
+    <button class="btn" id="rsBtn" onclick="submitResetPassword()">Modifier mon mot de passe</button>
+  `;
+}
+
+// Accepte le lien complet collé (…?token=xxx) ou le token seul
+function extractResetToken(raw){
+  const s = (raw || '').trim();
+  const m = s.match(/[?&]token=([^&\s#]+)/i);
+  return m ? decodeURIComponent(m[1]) : s;
+}
+
+async function submitResetPassword(){
+  const token = extractResetToken(document.getElementById('rTok').value);
+  const pass = document.getElementById('rNewPass').value;
+  const pass2 = document.getElementById('rNewPass2').value;
+  const msg = document.getElementById('rsMsg');
+  msg.textContent = '';
+  if(!token) return msg.textContent = 'Collez le lien reçu par email.';
+  if(pass.length < 8) return msg.textContent = t('err.pass8');
+  if(pass !== pass2) return msg.textContent = t('err.pass_match');
+
+  const btn = document.getElementById('rsBtn');
+  btn.disabled = true; btn.textContent = 'Modification…';
+  try{
+    const data = await apiFetch('/api_reset_password.php', {method:'POST', body: JSON.stringify({
+      token, password: pass, confirm_password: pass2
+    })});
+    if(data.success){
+      document.getElementById('subpageBody').innerHTML = `
+        <div style="text-align:center;padding:24px 4px;">
+          <div style="font-size:46px;">✅</div>
+          <h3 style="margin:10px 0 8px;">Mot de passe modifié</h3>
+          <p style="color:#555;font-size:14.5px;line-height:1.5;">${escapeHtml(data.message)}</p>
+          <button class="btn" style="margin-top:18px;" onclick="closeSubpage();go('profil')">Se connecter</button>
+        </div>`;
+    } else {
+      msg.textContent = data.error || t('common.err');
+      btn.disabled = false; btn.textContent = 'Modifier mon mot de passe';
+    }
+  }catch(e){
+    msg.textContent = t('net.error');
+    btn.disabled = false; btn.textContent = 'Modifier mon mot de passe';
+  }
+}
+
+/* ---------------- PROFIL (écran principal, connexion) ---------------- */
+async function loadProfil(){
+  const el = document.getElementById('profilContent');
+  try{
+    const res = await fetch(API_BASE + '/api_me.php', { credentials: 'include' });
+    const data = await res.json();
+    if(data.success && data.logged_in){
+      renderProfilLoggedIn(data.user);
+    } else {
+      renderProfilLoggedOut();
+    }
+  }catch(e){
+    console.warn('Profil indisponible', e);
+    renderProfilLoggedOut();
+  }
+}
+
+// Chaque rubrique ouvre désormais un écran natif léger (sous-page), au lieu
+// de naviguer vers la page desktop du site.
+function renderProfilLoggedIn(user){
+  document.getElementById('profilContent').innerHTML = `
+    <div class="avatar">${user.initial || '?'}</div>
+    <div class="profile-name">${escapeHtml(user.nom)}</div>
+    <div class="profile-sub">${escapeHtml(user.email)}</div>
+    <div class="menu-row" onclick="openProfileEdit()"><span class="l">👤 ${t('profile.mine')}</span><span>›</span></div>
+    <div class="menu-row" onclick="openEspacePro()"><span class="l">🏪 ${t('profile.pro')}</span><span>›</span></div>
+    <div class="menu-row" onclick="openMesAnnonces()"><span class="l">📋 ${t('profile.ads')}</span><span>›</span></div>
+    <div class="menu-row" onclick="openMessagerie()"><span class="l">💬 ${t('profile.msgs')}</span><span>›</span></div>
+    <button class="btn ghost" style="margin-top:14px;" onclick="logout()">${t('auth.logout')}</button>
+  `;
+}
+
+function renderProfilLoggedOut(){
+  document.getElementById('profilContent').innerHTML = `
+    <p style="text-align:center;color:var(--muted);font-size:14px;margin:10px 0 20px;">${t('auth.login_hint')}</p>
+    <div class="field"><label>${t('auth.email')}</label><input id="loginEmail" type="email" placeholder="vous@exemple.com"></div>
+    <div class="field"><label>${t('auth.password')}</label><input id="loginPassword" type="password" placeholder="••••••••"></div>
+    <div id="loginError" style="color:#dc2626;font-size:13px;margin-bottom:10px;"></div>
+    <div style="text-align:right;margin:-4px 0 10px;">
+  <a href="#" onclick="openForgotPassword();return false;" style="color:var(--orange-dark);font-size:13px;font-weight:600;">${t('auth.forgot')}</a>
+</div>
+    <button class="btn" onclick="submitLogin()">${t('auth.login')}</button>
+    <p style="text-align:center;color:var(--muted);font-size:13.5px;margin:18px 0 8px;">${t('auth.no_account')}</p>
+    <button class="btn ghost" onclick="openRegister()" data-i18n="auth.create">Créer un compte</button>
+  `;
+}
+
+async function submitLogin(){
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value.trim();
+  const errEl = document.getElementById('loginError');
+  errEl.textContent = '';
+  try{
+    const res = await fetch(API_BASE + '/api_login.php', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    const data = await res.json();
+    if(data.success){
+  if(data.session_id) localStorage.setItem('oz_sid', data.session_id); // ← indispensable
+  renderProfilLoggedIn(data.user);
+  await checkAuth();
+  if(pendingDetailId){ const id = pendingDetailId; pendingDetailId = null; openDetailById(id); }
+} else {
+      errEl.textContent = data.error || t('auth.login_error');
+    }
+  }catch(e){
+    errEl.textContent = t('auth.net');
+  }
+}
+
+async function logout(){
+  try{ await fetch(API_BASE + '/api_logout.php', { credentials: 'include' }); }catch(e){}
+  localStorage.removeItem('oz_sid');
+  pendingDetailId = null;
+  renderProfilLoggedOut();
+  currentUser = null;
+  resetDeposer();
+  updateDeposerGate();
+}
+
+// Chargement initial : catégories, annonces de l'accueil, état de connexion
+function applyNode(r){
+  if(!r || r.nodeType !== 1) return;
+  [r, ...r.querySelectorAll('[data-i18n],[data-i18n-ph]')].forEach(el => {
+    if(el.dataset.i18n){ const v = t(el.dataset.i18n); if(el.textContent !== v) el.textContent = v; }
+    if(el.dataset.i18nPh){ const v = t(el.dataset.i18nPh); if(el.placeholder !== v) el.placeholder = v; }
+  });
+}
+new MutationObserver(ms => ms.forEach(m => m.addedNodes.forEach(applyNode))).observe(document.body, {childList:true, subtree:true});
+applyI18n();
+loadCategories();
+loadListings(null, 'homeList');
+checkAuth();
+const h = location.hash.replace('#','');
+if(['deposer','annonces'].includes(h)) go(h);
+</script>
+<script>
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js', {scope:'./'});
+}
+</script>
+</body>
+</html>
