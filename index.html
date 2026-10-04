@@ -292,6 +292,11 @@ nav button.active{color:var(--orange-dark);}
     <div id="deposer-form"></div>
   </div>
 
+ <!-- DÉSCRIPTION -->
+<div class="field"><label data-i18n="post.f_desc">Description</label>
+  <button type="button" class="btn ghost small" id="dAiBtn" style="margin-bottom:8px;" onclick="generateDescription()">✨ Générer une description</button>
+  <textarea id="dDesc" rows="4" data-i18n-ph="ph.desc" placeholder="Décrivez votre bien : état, caractéristiques…"></textarea></div>
+
   <!-- PROFIL -->
   <div class="screen" id="s-profil">
     <div id="profilContent">
@@ -1221,6 +1226,36 @@ function removeDPhoto(i){
   const p = dPhotos.splice(i,1)[0];
   if(p) URL.revokeObjectURL(p.url);
   renderDPhotos();
+}
+
+const blobToB64 = b => new Promise((res, rej) => {
+  const r = new FileReader();
+  r.onload = () => res(r.result.split(',')[1]); r.onerror = rej;
+  r.readAsDataURL(b);
+});
+
+async function generateDescription(){
+  const v = id => document.getElementById(id).value.trim();
+  const msg = document.getElementById('dMsg'), btn = document.getElementById('dAiBtn'), ta = document.getElementById('dDesc');
+  msg.style.color = '#dc2626'; msg.textContent = '';
+  if(v('dTitle').length < 3){ msg.textContent = t('post.err_title'); return; }
+  if(ta.value.trim() && !confirm('Remplacer la description actuelle ?')) return;
+
+  const old = btn.textContent;
+  btn.disabled = true; btn.textContent = '✨ Rédaction en cours…';
+  try{
+    // Photos réduites à 768 px pour un envoi rapide (3 max)
+    const photos = [];
+    for(const p of dPhotos.slice(0, 3)) photos.push(await blobToB64(await downscaleImage(p.blob, 768, 0.7)));
+    const sel = document.getElementById('dCat');
+    const data = await apiFetch('/api_ad_describe.php', {method:'POST', body: JSON.stringify({
+      title: v('dTitle'), category: sel.options[sel.selectedIndex]?.text || '',
+      city: v('dCity'), price: v('dPrice'), lang: LANG, photos
+    })});
+    if(data.success){ ta.value = data.description; }
+    else { msg.textContent = data.error || t('common.err'); }
+  }catch(e){ msg.textContent = t('net.error'); }
+  btn.disabled = false; btn.textContent = old;
 }
 
 async function submitAd(){
