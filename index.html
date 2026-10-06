@@ -278,8 +278,8 @@ nav button.active{color:var(--orange-dark);}
   <div class="screen active" id="s-accueil">
     <div class="search"><span>🔍</span><input id="homeQ" data-i18n-ph="home.search_ph" placeholder="Que recherchez-vous ?" enterkeyhint="search">
   <button class="btn small" style="width:auto;padding:8px 12px;flex-shrink:0;" onclick="doHomeSearch()" data-i18n="home.search_btn">Rechercher</button></div>
-    <div id="ozaSection"></div>
     <div class="cats" id="catsGrid"></div>
+    <div id="ozaSection"></div>
     <div class="banner">
       <b data-i18n="home.banner_t">Une seconde vie pour vos objets 🌿</b>
       <span data-i18n="home.banner_s">Déposez votre première annonce en moins d'une minute.</span>
@@ -432,6 +432,10 @@ function subName(n){ const k = subKey(n); return k ? t('sub.'+k) : (n.name || ''
 function subIcon(n){ const k = subKey(n); return k ? SUB_META[k].icon : '📦'; }
 function subNameByText(txt){ if(!txt) return txt; const k = subKey({name:txt}); return k ? t('sub.'+k) : txt; }
 
+function subDefaultName(k){ return t('sub.'+k); }
+function ozaTitle(c){ return c ? catLabel(c) : t('cat.ozamarket'); }
+function ozaSubtitle(){ return t('oza.sub'); }
+function ozaSeeAll(){ return t('oza.see_all'); }
 function ozaCat(){ return categories.find(c => normSlug(c.slug) === 'ozamarket') || null; }
 let ozaSubs = { lang:null, id:null, nodes:[] };
 async function loadOzaSubs(){
@@ -444,21 +448,31 @@ async function loadOzaSubs(){
   return ozaSubs.nodes;
 }
 
-// Bloc OZAMarket de l'accueil : bandeau violet + sous-catégories défilantes
-async function renderOza(){
+// Bloc OZAMarket de l'accueil : affiché dès le départ avec les sous-catégories par défaut,
+// puis remplacé par les vraies sous-catégories (avec leurs identifiants) quand l'API répond.
+const SUB_DEFAULTS = ['meubles','electronique','bricolage','electromenager','vetements','jardin','sante','jeux','autres'];
+function ozaTiles(){
+  const nodes = ozaSubs.nodes;
+  return nodes.length
+    ? nodes.map(n => ({ id:n.id, key:subKey(n), icon:subIcon(n), name:subName(n) }))
+    : SUB_DEFAULTS.map(k => ({ id:null, key:k, icon:SUB_META[k].icon, name:subDefaultName(k) }));
+}
+function renderOza(){
   const el = document.getElementById('ozaSection'); if(!el) return;
   const c = ozaCat();
-  if(!c){ el.innerHTML = ''; return; }
-  const nodes = await loadOzaSubs();
   el.innerHTML = `<div class="oza-box">
     <div class="oza-head" onclick="pickOzaSub(null)">
-      <div><div class="tt">🛒 ${escapeHtml(catLabel(c))}</div><div class="ss">${t('oza.sub')}</div></div>
-      <span class="all">${t('oza.see_all')} ›</span>
+      <div><div class="tt">🛒 ${escapeHtml(ozaTitle(c))}</div><div class="ss">${ozaSubtitle()}</div></div>
+      <span class="all">${ozaSeeAll()} ›</span>
     </div>
-    <div class="oza-scroll">${nodes.map(n =>
-      `<div class="oza-tile" onclick="pickOzaSub(${n.id})"><div class="ico">${subIcon(n)}</div><div class="lab">${escapeHtml(subName(n))}</div></div>`
+    <div class="oza-scroll">${ozaTiles().map(x =>
+      `<div class="oza-tile" onclick="pickOzaSub(${x.id},'${x.key || ''}')"><div class="ico">${x.icon}</div><div class="lab">${escapeHtml(x.name)}</div></div>`
     ).join('')}</div>
   </div>`;
+  // Récupère les vraies sous-catégories en arrière-plan, puis réaffiche
+  if(c && (ozaSubs.id !== c.id || ozaSubs.lang !== LANG || !ozaSubs.nodes.length)){
+    loadOzaSubs().then(n => { if(n.length) renderOza(); });
+  }
 }
 
 // Puces de sous-catégories affichées dans l'écran Annonces quand OZAMarket est sélectionné
@@ -472,10 +486,12 @@ async function renderSubChips(){
     nodes.map(n => `<div class="subchip ${searchFilters.subId===n.id?'on':''}" onclick="pickOzaSub(${n.id})">${subIcon(n)} ${escapeHtml(subName(n))}</div>`).join('');
 }
 
-async function pickOzaSub(subId){
+async function pickOzaSub(subId, key){
   const c = ozaCat(); if(!c) return;
   const nodes = await loadOzaSubs();
-  const n = subId ? nodes.find(x => x.id === subId) : null;
+  let n = null;
+  if(subId) n = nodes.find(x => x.id === subId) || null;
+  else if(key) n = nodes.find(x => subKey(x) === key) || null; // tuile par défaut : retrouve l'identifiant réel
   currentCategoryId = c.id;
   searchFilters.subId = n ? n.id : null;
   searchFilters.subLabel = n ? subName(n) : '';
@@ -2072,6 +2088,7 @@ function applyNode(r){
 }
 new MutationObserver(ms => ms.forEach(m => m.addedNodes.forEach(applyNode))).observe(document.body, {childList:true, subtree:true});
 applyI18n();
+renderOza();
 loadCategories();
 loadListings(null, 'homeList');
 checkAuth();
