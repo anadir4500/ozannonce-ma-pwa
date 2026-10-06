@@ -1731,6 +1731,22 @@ async function submitProDemande(){
 /* ---------- FILTRES DE RECHERCHE ---------- */
 const searchFilters = { q:'', city:'', priceMin:'', priceMax:'', type:'', subId:null, subLabel:'' };
 
+/* Retrouve un nœud de sous-catégorie (arbre OZAMarket de l'accueil ou arbre de la sous-page Filtres) */
+function findSubNode(id, nodes){
+  for(const n of (nodes || [])){
+    if(n.id === id) return n;
+    const r = findSubNode(id, n.children);
+    if(r) return r;
+  }
+  return null;
+}
+function collectSubIds(n){ return [n.id].concat(...(n.children || []).map(collectSubIds)); }
+// id de la sous-catégorie + ids de tous ses descendants
+function subIdsFor(id){
+  const n = findSubNode(id, ozaSubs.nodes) || findSubNode(id, fltTree);
+  return n ? collectSubIds(n) : [id];
+}
+
 function buildUrl(targetId, page, categoryId){
   if(targetId === 'homeList'){
     let u = API_BASE + '/api_listings.php?page=' + page;
@@ -1738,8 +1754,16 @@ function buildUrl(targetId, page, categoryId){
     return u;
   }
   const f = searchFilters, p = new URLSearchParams({ page });
-  if(categoryId)  p.set('category_id', categoryId);
-  if(f.subId)     p.set('subcategory_id', f.subId);
+  if(f.subId){
+    // Une sous-catégorie identifie déjà sa catégorie : on n'envoie PAS category_id
+    // (sinon le serveur croise les deux critères et renvoie 0 résultat pour OZAMarket).
+    // On envoie aussi tous les descendants, pour qu'un parent (« Tout X ») ramène les annonces de ses enfants.
+    const ids = subIdsFor(f.subId);
+    p.set('subcategory_id', f.subId);
+    if(ids.length > 1) p.set('subcategory_ids', ids.join(','));
+  } else if(categoryId){
+    p.set('category_id', categoryId);
+  }
   if(f.q)         p.set('q', f.q);
   if(f.city)      p.set('city', f.city);
   if(f.priceMin !== '') p.set('price_min', f.priceMin);
