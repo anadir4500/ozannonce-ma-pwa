@@ -43,7 +43,7 @@ const I18N = {
     'list.search_ph':'Search for a listing…','list.filters':'Filters','list.clear':'Clear',
     'list.loading':'Loading listings…','list.none':'No listings yet.','list.error':'Unable to load listings right now.',
     'list.more':'Show more listings','list.loading_short':'Loading…','list.retry':'Retry',
-    'price.unset':'Price not specified','loc.unset':'Location not specified','common.cur':'€',
+    'price.unset':'Price not specified','loc.unset':'Location not specified','common.cur':'DH',
     'detail.desc':'Description','detail.specs':'Features','detail.seller':'Seller','detail.similar':'Similar listings',
     'detail.no_desc':'No description available','detail.views':'views','detail.ref':'Ref.','detail.pro':'Professional','detail.private':'Private',
     'detail.no_phone':'Phone number not provided','detail.gate':'🔒 Log in to see the phone number and contact the seller.',
@@ -54,7 +54,7 @@ const I18N = {
     'profile.mine':'My Profile','profile.pro':'My business space','profile.ads':'My listings','profile.msgs':'My Messages',
     'post.title':'Post a listing','post.need_login':'You must be logged in to post a listing.',
     'post.add_photos':'Add photos ({n} max)','post.first_photo':'The first one will be the main photo',
-    'post.f_title':'Title *','post.f_cat':'Category *','post.f_price':'Price (€)','post.f_desc':'Description','post.f_city':'City *','post.f_tel':'Phone (10 digits)',
+    'post.f_title':'Title *','post.f_cat':'Category *','post.f_price':'Price (DH)','post.f_desc':'Description','post.f_city':'City *','post.f_tel':'Phone (10 digits)',
     'post.choose':'Choose…','post.publish':'Publish listing','post.publishing':'Publishing…',
     'post.err_title':'The title must contain at least 3 characters.','post.err_cat':'Please choose a category.','post.err_city':'City is required.',
     'post.err_tel':'The phone number must contain exactly 10 digits.','post.err_price':'Invalid price.',
@@ -75,7 +75,7 @@ const I18N = {
     'list.search_ph':'ابحث عن إعلان…','list.filters':'تصفية','list.clear':'مسح',
     'list.loading':'جارٍ تحميل الإعلانات…','list.none':'لا توجد إعلانات حاليًا.','list.error':'تعذّر تحميل الإعلانات في الوقت الحالي.',
     'list.more':'عرض المزيد من الإعلانات','list.loading_short':'جارٍ التحميل…','list.retry':'إعادة المحاولة',
-    'price.unset':'السعر غير محدد','loc.unset':'الموقع غير محدد','common.cur':'€',
+    'price.unset':'السعر غير محدد','loc.unset':'الموقع غير محدد','common.cur':'DH',
     'detail.desc':'الوصف','detail.specs':'المواصفات','detail.seller':'البائع','detail.similar':'إعلانات مشابهة',
     'detail.no_desc':'لا يوجد وصف متاح','detail.views':'مشاهدة','detail.ref':'المرجع','detail.pro':'محترف','detail.private':'فرد',
     'detail.no_phone':'رقم الهاتف غير متوفر','detail.gate':'🔒 سجّل الدخول لرؤية الرقم والتواصل مع البائع.',
@@ -86,7 +86,7 @@ const I18N = {
     'profile.mine':'ملفي الشخصي','profile.pro':'مساحتي المهنية','profile.ads':'إعلاناتي','profile.msgs':'رسائلي',
     'post.title':'أضف إعلانًا','post.need_login':'يجب تسجيل الدخول لإضافة إعلان.',
     'post.add_photos':'أضف صورًا ({n} كحد أقصى)','post.first_photo':'الصورة الأولى ستكون الصورة الرئيسية',
-    'post.f_title':'العنوان *','post.f_cat':'الفئة *','post.f_price':'السعر (€)','post.f_desc':'الوصف','post.f_city':'المدينة *','post.f_tel':'الهاتف (10 أرقام)',
+    'post.f_title':'العنوان *','post.f_cat':'الفئة *','post.f_price':'السعر (DH)','post.f_desc':'الوصف','post.f_city':'المدينة *','post.f_tel':'الهاتف (10 أرقام)',
     'post.choose':'اختر…','post.publish':'نشر الإعلان','post.publishing':'جارٍ النشر…',
     'post.err_title':'يجب أن يحتوي العنوان على 3 أحرف على الأقل.','post.err_cat':'اختر فئة.','post.err_city':'المدينة مطلوبة.',
     'post.err_tel':'يجب أن يتكون رقم الهاتف من 10 أرقام بالضبط.','post.err_price':'سعر غير صالح.',
@@ -107,7 +107,7 @@ const I18N = {
     'list.search_ph':'Buscar un anuncio…','list.filters':'Filtros','list.clear':'Borrar',
     'list.loading':'Cargando anuncios…','list.none':'Aún no hay anuncios.','list.error':'No se pueden cargar los anuncios en este momento.',
     'list.more':'Ver más anuncios','list.loading_short':'Cargando…','list.retry':'Reintentar',
-    'price.unset':'Precio no especificado','loc.unset':'Ubicación no especificada','common.cur':'€',
+    'price.unset':'Precio no especificado','loc.unset':'Ubicación no especificada','common.cur':'DH',
     'detail.desc':'Descripción','detail.specs':'Características','detail.seller':'Vendedor','detail.similar':'Anuncios similares',
     'detail.no_desc':'Sin descripción disponible','detail.views':'visitas','detail.ref':'Ref.','detail.pro':'Profesional','detail.private':'Particular',
     'detail.no_phone':'Teléfono no indicado','detail.gate':'🔒 Inicia sesión para ver el número y contactar al vendedor.',
@@ -118,7 +118,7 @@ const I18N = {
     'profile.mine':'Mi Perfil','profile.pro':'Mi espacio profesional','profile.ads':'Mis anuncios','profile.msgs':'Mi Mensajería',
     'post.title':'Publicar un anuncio','post.need_login':'Debes iniciar sesión para publicar un anuncio.',
     'post.add_photos':'Añadir fotos (máx. {n})','post.first_photo':'La primera será la foto principal',
-    'post.f_title':'Título *','post.f_cat':'Categoría *','post.f_price':'Precio (€)','post.f_desc':'Descripción','post.f_city':'Ciudad *','post.f_tel':'Teléfono (10 dígitos)',
+    'post.f_title':'Título *','post.f_cat':'Categoría *','post.f_price':'Precio (DH)','post.f_desc':'Descripción','post.f_city':'Ciudad *','post.f_tel':'Teléfono (10 dígitos)',
     'post.choose':'Elegir…','post.publish':'Publicar el anuncio','post.publishing':'Publicando…',
     'post.err_title':'El título debe tener al menos 3 caracteres.','post.err_cat':'Elige una categoría.','post.err_city':'La ciudad es obligatoria.',
     'post.err_tel':'El teléfono debe tener exactamente 10 dígitos.','post.err_price':'Precio no válido.',
@@ -129,6 +129,12 @@ const I18N = {
     'common.save':'Guardar','common.delete':'Eliminar el anuncio','common.close':'Cerrar','common.back':'Volver'
   }
 };
+
+// ----- OZAMarket : sous-catégories & libellés -----
+Object.assign(I18N.fr, {'post.f_sub':'Sous-catégorie','post.err_sub':'Choisissez une sous-catégorie.','oza.sub':'Achetez et vendez près de chez vous','oza.all':'Tout OZAMarket','oza.see_all':'Voir tout','oza.pick':'Choisissez une sous-catégorie','sub.meubles':'Meubles','sub.electronique':'Électronique & Multimédia','sub.bricolage':'Bricolage','sub.electromenager':'Électroménager','sub.vetements':'Vêtements','sub.jardin':'Jardin','sub.sante':'Santé & Paramédical','sub.jeux':'Jeux & Jouets','sub.autres':'Autres'});
+Object.assign(I18N.en, {'post.f_sub':'Subcategory','post.err_sub':'Please choose a subcategory.','oza.sub':'Buy and sell near you','oza.all':'All OZAMarket','oza.see_all':'See all','oza.pick':'Choose a subcategory','sub.meubles':'Furniture','sub.electronique':'Electronics & Multimedia','sub.bricolage':'DIY & Tools','sub.electromenager':'Home Appliances','sub.vetements':'Clothing','sub.jardin':'Garden','sub.sante':'Health & Paramedical','sub.jeux':'Games & Toys','sub.autres':'Other'});
+Object.assign(I18N.ar, {'post.f_sub':'الفئة الفرعية','post.err_sub':'اختر فئة فرعية.','oza.sub':'اشترِ وبِع بالقرب منك','oza.all':'كل أوزا ماركت','oza.see_all':'عرض الكل','oza.pick':'اختر فئة فرعية','sub.meubles':'أثاث','sub.electronique':'إلكترونيات ووسائط متعددة','sub.bricolage':'أشغال يدوية وأدوات','sub.electromenager':'أجهزة منزلية','sub.vetements':'ملابس','sub.jardin':'حديقة','sub.sante':'الصحة والتمريض','sub.jeux':'ألعاب ولعب أطفال','sub.autres':'أخرى'});
+Object.assign(I18N.es, {'post.f_sub':'Subcategoría','post.err_sub':'Elige una subcategoría.','oza.sub':'Compra y vende cerca de ti','oza.all':'Todo OZAMarket','oza.see_all':'Ver todo','oza.pick':'Elige una subcategoría','sub.meubles':'Muebles','sub.electronique':'Electrónica y Multimedia','sub.bricolage':'Bricolaje','sub.electromenager':'Electrodomésticos','sub.vetements':'Ropa','sub.jardin':'Jardín','sub.sante':'Salud y Paramédico','sub.jeux':'Juegos y Juguetes','sub.autres':'Otros'});
 
 const LANG_LOCALE = { fr:'fr-FR', en:'en-GB', ar:'ar', es:'es-ES' };
 const LANG_NAMES  = { fr:'Français', en:'English', ar:'العربية', es:'Español' };
