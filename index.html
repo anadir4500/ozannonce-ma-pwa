@@ -74,6 +74,25 @@ h3.section{font-size:16px;margin:0 0 12px;font-weight:700;}
   font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;}
 .chip.on{background:var(--orange);color:#fff;border-color:var(--orange);}
 
+/* OZAMarket */
+.oza-box{background:linear-gradient(135deg,#8b5cf6,#6d28d9);border-radius:20px;padding:16px 0 14px;margin-bottom:22px;color:#fff;
+  box-shadow:0 8px 20px -6px rgba(109,40,217,.45);}
+.oza-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 16px;margin-bottom:12px;cursor:pointer;}
+.oza-head .tt{font-weight:800;font-size:17px;}
+.oza-head .ss{font-size:12px;opacity:.9;margin-top:2px;}
+.oza-head .all{background:rgba(255,255,255,.2);border-radius:999px;padding:6px 12px;font-size:12px;font-weight:700;white-space:nowrap;}
+.oza-scroll{display:flex;gap:10px;overflow-x:auto;padding:2px 16px 4px;scrollbar-width:none;}
+.oza-scroll::-webkit-scrollbar{display:none;}
+.oza-tile{flex:0 0 84px;background:#fff;color:var(--text);border-radius:16px;padding:12px 6px;text-align:center;cursor:pointer;transition:transform .1s;}
+.oza-tile:active{transform:scale(.94);}
+.oza-tile .ico{font-size:26px;margin-bottom:6px;}
+.oza-tile .lab{font-size:10.5px;font-weight:700;line-height:1.25;color:#4c1d95;}
+.subchips{display:flex;gap:8px;overflow-x:auto;margin:-6px 0 16px;padding-bottom:2px;scrollbar-width:none;}
+.subchips:empty{display:none;}
+.subchip{flex-shrink:0;padding:6px 13px;border-radius:999px;background:#f5f3ff;border:1px solid #ddd6fe;font-size:12.5px;font-weight:600;color:#6d28d9;cursor:pointer;}
+.subchip.on{background:#8b5cf6;color:#fff;border-color:#8b5cf6;}
+.cat.oza{border-color:#8b5cf6;}
+
 /* CTA banner */
 .banner{position:relative;overflow:hidden;background:linear-gradient(135deg,#fb923c,#dc2626);border-radius:20px;
   padding:22px;color:#fff;margin-bottom:22px;box-shadow:0 8px 20px -6px rgba(220,38,38,.45);}
@@ -259,6 +278,7 @@ nav button.active{color:var(--orange-dark);}
   <div class="screen active" id="s-accueil">
     <div class="search"><span>🔍</span><input id="homeQ" data-i18n-ph="home.search_ph" placeholder="Que recherchez-vous ?" enterkeyhint="search">
   <button class="btn small" style="width:auto;padding:8px 12px;flex-shrink:0;" onclick="doHomeSearch()" data-i18n="home.search_btn">Rechercher</button></div>
+    <div id="ozaSection"></div>
     <div class="cats" id="catsGrid"></div>
     <div class="banner">
       <b data-i18n="home.banner_t">Une seconde vie pour vos objets 🌿</b>
@@ -277,6 +297,7 @@ nav button.active{color:var(--orange-dark);}
   </div>
   <div id="fltSummary" style="font-size:12.5px;color:var(--muted);margin:0 2px 10px;"></div>
   <div class="chips" id="chipsRow"></div>
+  <div class="subchips" id="subChipsRow"></div>
   <div class="ad-list" id="fullList"></div>
 </div>
 
@@ -383,6 +404,85 @@ let categories = [];
 let catsExpanded = false;
 let currentCategoryId = null;
 
+
+/* ---------- OZAMarket : sous-catégories ---------- */
+const SUB_META = {
+  meubles:{icon:'🛋️'}, electronique:{icon:'📱'}, bricolage:{icon:'🛠️'}, electromenager:{icon:'🔌'},
+  vetements:{icon:'👕'}, jardin:{icon:'🌿'}, sante:{icon:'🩺'}, jeux:{icon:'🧸'}, autres:{icon:'➕'}
+};
+// Reconnaît la sous-catégorie à partir du slug/nom renvoyé par l'API (fr, en, es, ar)
+const SUB_RULES = [
+  ['electromenager', /electromenag|appliance|electrodomestic|أجهزة منزلية|اجهزة منزلية/],
+  ['electronique',   /electronique|electronic|electronica|multimedia|multimédia|إلكترون|الكترون/],
+  ['meubles',        /meuble|furniture|mueble|أثاث|اثاث/],
+  ['bricolage',      /bricol|diy|tools|أشغال|اشغال/],
+  ['vetements',      /vetement|cloth|ropa|apparel|ملابس/],
+  ['jardin',         /jardin|garden|jardín|حديقة|بستن/],
+  ['sante',          /sante|health|salud|paramed|صح/],
+  ['jeux',           /jeux|jouet|toy|game|juego|juguete|ألعاب|العاب|لعب/],
+  ['autres',         /autre|other|otro|أخرى|اخرى/],
+];
+function subKey(n){
+  const raw = ((n && (n.slug||'')) + ' ' + (n && n.name || '')).toLowerCase();
+  const flat = raw.normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  for(const [k,re] of SUB_RULES){ if(re.test(flat) || re.test(raw)) return k; }
+  return null;
+}
+function subName(n){ const k = subKey(n); return k ? t('sub.'+k) : (n.name || ''); }
+function subIcon(n){ const k = subKey(n); return k ? SUB_META[k].icon : '📦'; }
+function subNameByText(txt){ if(!txt) return txt; const k = subKey({name:txt}); return k ? t('sub.'+k) : txt; }
+
+function ozaCat(){ return categories.find(c => normSlug(c.slug) === 'ozamarket') || null; }
+let ozaSubs = { lang:null, id:null, nodes:[] };
+async function loadOzaSubs(){
+  const c = ozaCat(); if(!c) return [];
+  if(ozaSubs.id === c.id && ozaSubs.lang === LANG && ozaSubs.nodes.length) return ozaSubs.nodes;
+  try{
+    const d = await apiFetch('/api_filters.php?category_id=' + c.id);
+    ozaSubs = { lang: LANG, id: c.id, nodes: (d && d.success && d.tree) ? d.tree : [] };
+  }catch(e){ ozaSubs = { lang: LANG, id: c.id, nodes: [] }; }
+  return ozaSubs.nodes;
+}
+
+// Bloc OZAMarket de l'accueil : bandeau violet + sous-catégories défilantes
+async function renderOza(){
+  const el = document.getElementById('ozaSection'); if(!el) return;
+  const c = ozaCat();
+  if(!c){ el.innerHTML = ''; return; }
+  const nodes = await loadOzaSubs();
+  el.innerHTML = `<div class="oza-box">
+    <div class="oza-head" onclick="pickOzaSub(null)">
+      <div><div class="tt">🛒 ${escapeHtml(catLabel(c))}</div><div class="ss">${t('oza.sub')}</div></div>
+      <span class="all">${t('oza.see_all')} ›</span>
+    </div>
+    <div class="oza-scroll">${nodes.map(n =>
+      `<div class="oza-tile" onclick="pickOzaSub(${n.id})"><div class="ico">${subIcon(n)}</div><div class="lab">${escapeHtml(subName(n))}</div></div>`
+    ).join('')}</div>
+  </div>`;
+}
+
+// Puces de sous-catégories affichées dans l'écran Annonces quand OZAMarket est sélectionné
+async function renderSubChips(){
+  const el = document.getElementById('subChipsRow'); if(!el) return;
+  const c = ozaCat();
+  if(!c || currentCategoryId !== c.id){ el.innerHTML = ''; return; }
+  const nodes = await loadOzaSubs();
+  if(currentCategoryId !== c.id){ el.innerHTML = ''; return; }
+  el.innerHTML = `<div class="subchip ${!searchFilters.subId?'on':''}" onclick="pickOzaSub(null)">${t('oza.all')}</div>` +
+    nodes.map(n => `<div class="subchip ${searchFilters.subId===n.id?'on':''}" onclick="pickOzaSub(${n.id})">${subIcon(n)} ${escapeHtml(subName(n))}</div>`).join('');
+}
+
+async function pickOzaSub(subId){
+  const c = ozaCat(); if(!c) return;
+  const nodes = await loadOzaSubs();
+  const n = subId ? nodes.find(x => x.id === subId) : null;
+  currentCategoryId = c.id;
+  searchFilters.subId = n ? n.id : null;
+  searchFilters.subLabel = n ? subName(n) : '';
+  searchFilters.type = '';
+  runSearch(); go('annonces'); renderChips();
+}
+
 async function loadCategories(){
   try{
     const res = await fetch(API_BASE + '/api_categories.php');
@@ -397,7 +497,8 @@ async function loadCategories(){
 function renderCats(){
   const el = document.getElementById('catsGrid');
   if(!categories.length){ el.innerHTML = `<p style="color:#999;font-size:13px;grid-column:1/-1">${t('cat.loading')}</p>`; return; }
-  let list = categories;
+  let list = categories.filter(c => normSlug(c.slug) !== 'ozamarket');
+  renderOza();
   let items;
   if(!catsExpanded){
     items = list.slice(0,3).map(c=>{
@@ -422,6 +523,7 @@ function renderChips(){
       return `<div class="chip ${currentCategoryId===c.id?'on':''}" onclick="filterByCategory(${c.id})">${m.icon} ${m.label}</div>`;
     }));
   el.innerHTML = chips.join('');
+  renderSubChips();
 }
 
 function filterByCategory(categoryId){
@@ -502,7 +604,7 @@ function renderList(targetId, list, total){
   }
   const cards = list.map((a,i)=>{
     const m = metaFor(a.category_slug);
-    const priceTxt = (a.price === null || a.price === 0) ? t('price.unset') : (Math.round(a.price) + ' ' + (a.currency||'€'));
+    const priceTxt = (a.price === null || a.price === 0) ? t('price.unset') : (Math.round(a.price) + ' ' + (a.currency||'DH'));
     const thumbInner = a.image
       ? `<img src="${a.image}" alt="" onerror="this.outerHTML='<span>${m.icon}</span>'">`
       : `<span>${m.icon}</span>`;
@@ -683,7 +785,7 @@ function closeLightbox(){
 /* ---------- FICHE DÉTAIL (api_details.php) ---------- */
 let currentDetail = null;
 let pendingDetailId = null;
-const fmtPrice = a => (a.price === null || a.price === 0) ? t('price.unset') : (Math.round(a.price) + ' ' + (a.currency || '€'));
+const fmtPrice = a => (a.price === null || a.price === 0) ? t('price.unset') : (Math.round(a.price) + ' ' + (a.currency || 'DH'));
 const imgOrIcon = (src, icon) => src
   ? `<img src="${escapeHtml(src)}" alt="" onerror="this.outerHTML='<span>${icon}</span>'">` : `<span>${icon}</span>`;
 
@@ -718,7 +820,7 @@ const gallery = a.images.length
   ? a.images.map((im, i) => `<div onclick="openLightbox(${i})">${imgOrIcon(im.url, m.icon)}</div>`).join('')
   : `<div>${m.icon}</div>`;
   const date = new Date((a.created_at || '').replace(' ', 'T')).toLocaleDateString(LANG_LOCALE[LANG]);
-  const tags = [catName(a.category_slug, a.category_name), a.subcategory_name, a.condition, a.property_type, a.transaction,
+  const tags = [catName(a.category_slug, a.category_name), subNameByText(a.subcategory_name), a.condition, a.property_type, a.transaction,
     a.seller_type === 'professionnel' ? t('detail.pro') : (a.seller_type ? t('detail.private') : null)]
     .filter(Boolean).map(t => `<span class="dt-tag">${escapeHtml(t)}</span>`).join('');
   const attrs = a.attributes.length
@@ -853,7 +955,7 @@ async function openMesAnnonces(){
     }
     document.getElementById('subpageBody').innerHTML = myAdsCache.map((a,i)=>{
       const m = metaFor(a.category_slug);
-      const priceTxt = a.price ? Math.round(a.price)+' '+(a.currency||'€') : t('price.unset');
+      const priceTxt = a.price ? Math.round(a.price)+' '+(a.currency||'DH') : t('price.unset');
       const thumb = a.image ? `<img src="${a.image}" onerror="this.outerHTML='<span>${m.icon}</span>'">` : `<span>${m.icon}</span>`;
       return `<div class="ad-card" onclick="openAdEdit(${a.id})">
       ${newBadge(a)}
@@ -1148,9 +1250,10 @@ function renderDeposerForm(){
     <div id="dThumbs" class="img-thumb-row"></div>
     <div class="field"><label data-i18n="post.f_title">Titre *</label><input id="dTitle" maxlength="120" data-i18n-ph="ph.title" placeholder="Ex : Vélo électrique en très bon état"></div>
     <div class="field"><label data-i18n="post.f_cat">Catégorie *</label><select id="dCat"></select></div>
+    <div class="field" id="dSubField" style="display:none"><label id="dSubLabel">${t('post.f_sub')}</label><select id="dSub"></select></div>
     <div class="field"><label data-i18n="post.f_price">Prix (DH)</label><input id="dPrice" type="number" inputmode="decimal" min="0" step="0.01" data-i18n-ph="ph.price" placeholder="Laisser vide si non précisé"></div>
     <div class="field"><label data-i18n="post.f_desc">Description</label>
-  <button type="button" class="btn ghost small" id="dAiBtn" style="margin-bottom:8px;" onclick="generateDescription()">✨ Générer une description</button>
+  <button type="button" class="btn ghost small" id="dAiBtn" style="margin-bottom:8px;" onclick="generateDescription()">${aiT().btn}</button>
   <textarea id="dDesc" rows="5" data-i18n-ph="ph.desc" placeholder="Décrivez votre bien : état, caractéristiques…"></textarea>
   <div id="dAiHint" style="display:none;font-size:12.5px;line-height:1.45;margin-top:6px;border-radius:10px;padding:9px 11px;"></div></div>
     <div class="field"><label data-i18n="post.f_city">Ville *</label><input id="dCity" list="dCityList" autocomplete="off" data-i18n-ph="ph.city" placeholder="Tapez une ville"></div>
@@ -1163,6 +1266,7 @@ function renderDeposerForm(){
   document.getElementById('dTitle').addEventListener('blur', scheduleAutoDescription);
   bindCityAutocomplete('dCity', 'dCityList');
   fillDeposerCategories();
+  document.getElementById('dCat').addEventListener('change', onDepCatChange);
   // Préremplit le téléphone depuis le profil
   apiFetch('/api_profile.php').then(d => {
     const t = document.getElementById('dTel');
@@ -1179,6 +1283,37 @@ function fillDeposerCategories(){
   sel.innerHTML = '<option value="">'+t('post.choose')+'</option>' +
     categories.map(c => `<option value="${c.id}">${escapeHtml(catLabel(c))}</option>`).join('');
   if(prev) sel.value = prev;
+}
+
+// Sous-catégories du formulaire de dépôt (affichées dès que la catégorie en possède)
+const depSubCache = {};
+async function onDepCatChange(){
+  const catSel = document.getElementById('dCat'), field = document.getElementById('dSubField'), sub = document.getElementById('dSub');
+  if(!catSel || !field || !sub) return;
+  const cid = catSel.value;
+  sub.innerHTML = ''; field.style.display = 'none';
+  if(!cid) return;
+  const key = cid + '|' + LANG;
+  if(!depSubCache[key]){
+    try{
+      const d = await apiFetch('/api_filters.php?category_id=' + cid);
+      depSubCache[key] = (d && d.success && d.tree) ? d.tree : [];
+    }catch(e){ depSubCache[key] = []; }
+  }
+  if(catSel.value !== cid) return; // la catégorie a changé entre-temps
+  const tree = depSubCache[key];
+  if(!tree.length) return;
+  const opt = n => `<option value="${n.id}">${escapeHtml(subIcon(n) + ' ' + subName(n))}</option>`;
+  sub.innerHTML = '<option value="">' + t('post.choose') + '</option>' + tree.map(n =>
+    (n.children && n.children.length)
+      ? `<optgroup label="${escapeHtml(subName(n))}">${n.children.map(opt).join('')}</optgroup>`
+      : opt(n)
+  ).join('');
+  const c = categories.find(x => String(x.id) === cid);
+  const isOza = c && normSlug(c.slug) === 'ozamarket';
+  document.getElementById('dSubLabel').textContent = t('post.f_sub') + (isOza ? ' *' : '');
+  field.dataset.required = isOza ? '1' : '';
+  field.style.display = '';
 }
 
 async function onPhotosPicked(e){
@@ -1295,7 +1430,9 @@ async function generateDescription(auto){
 
   // Évite les appels inutiles (limite de 10 par heure)
   const sel = document.getElementById('dCat');
-  const sig = title + '|' + sel.value + '|' + dPhotos.slice(0,3).map(p => p.blob.size).join(',');
+  const subSel = document.getElementById('dSub');
+  const subTxt = (subSel && subSel.value) ? subSel.options[subSel.selectedIndex].text.replace(/^\S+\s/, '') : '';
+  const sig = title + '|' + sel.value + '|' + (subSel ? subSel.value : '') + '|' + dPhotos.slice(0,3).map(p => p.blob.size).join(',');
   if(auto && sig === aiState.sig) return;
   aiState.sig = sig;
 
@@ -1307,11 +1444,12 @@ async function generateDescription(auto){
     const payload = {
       title: title,
       category: sel.value ? sel.options[sel.selectedIndex].text : '',
+      subcategory: subTxt,
       city: v('dCity'),
       price: v('dPrice'),
       lang: LANG,
       photos: photos,
-      currency: API_BASE.endsWith('.ma') ? 'DH' : '€'
+      currency: 'DH'
     };
     const data = await apiFetch('/api_ad_describe.php', {method:'POST', body: JSON.stringify(payload)});
     if(data.success){
@@ -1340,6 +1478,8 @@ async function submitAd(){
   const title = v('dTitle'), cat = v('dCat'), city = v('dCity'), tel = v('dTel'), price = v('dPrice');
   if(title.length < 3) return msg.textContent = t('post.err_title');
   if(!cat) return msg.textContent = t('post.err_cat');
+  const subField = document.getElementById('dSubField'), subVal = document.getElementById('dSub').value;
+  if(subField.style.display !== 'none' && subField.dataset.required && !subVal) return msg.textContent = t('post.err_sub');
   if(!city) return msg.textContent = t('post.err_city');
   if(tel !== '' && !/^\d{10}$/.test(tel)) return msg.textContent = t('post.err_tel');
   if(price !== '' && (isNaN(price) || Number(price) < 0)) return msg.textContent = t('post.err_price');
@@ -1350,6 +1490,7 @@ async function submitAd(){
   const fd = new FormData();
   fd.append('title', title);
   fd.append('category_id', cat);
+  if(subVal) fd.append('subcategory_id', subVal);
   fd.append('description', v('dDesc'));
   fd.append('price', price);
   fd.append('city', city);
@@ -1699,14 +1840,14 @@ function renderFltSub(){
   }
   if(!nodes.length && !cur) h += '<p class="subpage-loading">Aucune sous-catégorie.</p>';
   nodes.forEach(n => {
-    h += row(n.name, n.children.length ? `fltOpen(${n.id})` : `fltPick(${n.id})`, fltPending.id === n.id, n.children.length > 0);
+    h += row(subName(n), n.children.length ? `fltOpen(${n.id})` : `fltPick(${n.id})`, fltPending.id === n.id, n.children.length > 0);
   });
   el.innerHTML = h;
 }
 function fltOpen(id){ fltStack.push(fltIndex[id]); renderFltSub(); }
 function fltUp(){ fltStack.pop(); renderFltSub(); }
 function fltPick(id){
-  fltPending = id ? { id, label: fltIndex[id].name } : { id:null, label:'' };
+  fltPending = id ? { id, label: subName(fltIndex[id]) } : { id:null, label:'' };
   renderFltSub();
 }
 
