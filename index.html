@@ -1317,16 +1317,18 @@ async function onDepCatChange(){
     }catch(e){ depSubCache[key] = []; }
   }
   if(catSel.value !== cid) return; // la catégorie a changé entre-temps
-  const tree = depSubCache[key];
+  let tree = depSubCache[key];
+  const c = categories.find(x => String(x.id) === cid);
+  const isOza = !!(c && normSlug(c.slug) === 'ozamarket');
+  // Sans réponse de api_filters.php : OZAMarket propose quand même ses sous-catégories (le serveur retrouve l'identifiant)
+  if(!tree.length && isOza) tree = SUB_DEFAULTS.map(k => ({ id:'k:' + k, name:subDefaultName(k), children:[], _icon:SUB_META[k].icon }));
   if(!tree.length) return;
-  const opt = n => `<option value="${n.id}">${escapeHtml(subIcon(n) + ' ' + subName(n))}</option>`;
+  const opt = n => `<option value="${n.id}">${escapeHtml((n._icon || subIcon(n)) + ' ' + subName(n))}</option>`;
   sub.innerHTML = '<option value="">' + t('post.choose') + '</option>' + tree.map(n =>
     (n.children && n.children.length)
       ? `<optgroup label="${escapeHtml(subName(n))}">${n.children.map(opt).join('')}</optgroup>`
       : opt(n)
   ).join('');
-  const c = categories.find(x => String(x.id) === cid);
-  const isOza = c && normSlug(c.slug) === 'ozamarket';
   document.getElementById('dSubLabel').textContent = t('post.f_sub') + (isOza ? ' *' : '');
   field.dataset.required = isOza ? '1' : '';
   field.style.display = '';
@@ -1506,7 +1508,7 @@ async function submitAd(){
   const fd = new FormData();
   fd.append('title', title);
   fd.append('category_id', cat);
-  if(subVal) fd.append('subcategory_id', subVal);
+  if(subVal){ if(String(subVal).indexOf('k:') === 0) fd.append('subcategory_key', subVal.slice(2)); else fd.append('subcategory_id', subVal); }
   fd.append('description', v('dDesc'));
   fd.append('price', price);
   fd.append('city', city);
