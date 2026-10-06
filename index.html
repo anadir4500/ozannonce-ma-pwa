@@ -1265,7 +1265,7 @@ function renderDeposerForm(){
     <div class="upload" onclick="document.getElementById('dPhotoInput').click()">📷<br>${t('post.add_photos',{n:D_MAX_PHOTOS})}<br><small>${t('post.first_photo')}</small></div>
     <div id="dThumbs" class="img-thumb-row"></div>
     <div class="field"><label data-i18n="post.f_title">Titre *</label><input id="dTitle" maxlength="120" data-i18n-ph="ph.title" placeholder="Ex : Vélo électrique en très bon état"></div>
-    <div class="field"><label data-i18n="post.f_cat">Catégorie *</label><select id="dCat"></select></div>
+    <div class="field"><label data-i18n="post.f_cat">Catégorie *</label><select id="dCat" autocomplete="off"></select></div>
     <div class="field" id="dSubField" style="display:none"><label id="dSubLabel">${t('post.f_sub')}</label><select id="dSub"></select></div>
     <div class="field"><label data-i18n="post.f_price">Prix (DH)</label><input id="dPrice" type="number" inputmode="decimal" min="0" step="0.01" data-i18n-ph="ph.price" placeholder="Laisser vide si non précisé"></div>
     <div class="field"><label data-i18n="post.f_desc">Description</label>
@@ -1282,7 +1282,6 @@ function renderDeposerForm(){
   document.getElementById('dTitle').addEventListener('blur', scheduleAutoDescription);
   bindCityAutocomplete('dCity', 'dCityList');
   fillDeposerCategories();
-  document.getElementById('dCat').addEventListener('change', onDepCatChange);
   // Préremplit le téléphone depuis le profil
   apiFetch('/api_profile.php').then(d => {
     const t = document.getElementById('dTel');
@@ -1299,12 +1298,28 @@ function fillDeposerCategories(){
   sel.innerHTML = '<option value="">'+t('post.choose')+'</option>' +
     categories.map(c => `<option value="${c.id}">${escapeHtml(catLabel(c))}</option>`).join('');
   if(prev) sel.value = prev;
+  if(sel.value) onDepCatChange();
 }
 
 // Sous-catégories du formulaire de dépôt (affichées dès que la catégorie en possède)
 const depSubCache = {};
+// Crée le champ « Sous-catégorie » s'il n'existe pas dans le formulaire (ne dépend pas du HTML du formulaire)
+function ensureSubField(){
+  let f = document.getElementById('dSubField');
+  if(f) return f;
+  const cat = document.getElementById('dCat'); if(!cat) return null;
+  const wrap = cat.closest('.field') || cat.parentNode;
+  f = document.createElement('div');
+  f.className = 'field'; f.id = 'dSubField'; f.style.display = 'none';
+  f.innerHTML = '<label id="dSubLabel"></label><select id="dSub" autocomplete="off"></select>';
+  wrap.insertAdjacentElement('afterend', f);
+  return f;
+}
+// Écoute globale : fonctionne même si le formulaire est reconstruit ou si la valeur est restaurée par le navigateur
+document.addEventListener('change', e => { if(e.target && e.target.id === 'dCat') onDepCatChange(); });
+
 async function onDepCatChange(){
-  const catSel = document.getElementById('dCat'), field = document.getElementById('dSubField'), sub = document.getElementById('dSub');
+  const catSel = document.getElementById('dCat'), field = ensureSubField(), sub = document.getElementById('dSub');
   if(!catSel || !field || !sub) return;
   const cid = catSel.value;
   sub.innerHTML = ''; field.style.display = 'none';
@@ -1496,8 +1511,8 @@ async function submitAd(){
   const title = v('dTitle'), cat = v('dCat'), city = v('dCity'), tel = v('dTel'), price = v('dPrice');
   if(title.length < 3) return msg.textContent = t('post.err_title');
   if(!cat) return msg.textContent = t('post.err_cat');
-  const subField = document.getElementById('dSubField'), subVal = document.getElementById('dSub').value;
-  if(subField.style.display !== 'none' && subField.dataset.required && !subVal) return msg.textContent = t('post.err_sub');
+  const subField = document.getElementById('dSubField'), subEl = document.getElementById('dSub'), subVal = subEl ? subEl.value : '';
+  if(subField && subField.style.display !== 'none' && subField.dataset.required && !subVal) return msg.textContent = t('post.err_sub');
   if(!city) return msg.textContent = t('post.err_city');
   if(tel !== '' && !/^\d{10}$/.test(tel)) return msg.textContent = t('post.err_tel');
   if(price !== '' && (isNaN(price) || Number(price) < 0)) return msg.textContent = t('post.err_price');
