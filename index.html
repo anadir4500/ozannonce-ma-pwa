@@ -1058,9 +1058,96 @@ async function deleteAd(id){
     if(data.success){ openMesAnnonces(); } else { alert(data.error || t('ads.del_err')); }
   }catch(e){ alert(t('net.error')); }
 }
+/* ---------- BOOST / PAIEMENT (mêmes options et mêmes prix que le desktop) ---------- */
+// Les prix affichés ici sont indicatifs : le serveur (payment_gateway.php, paiement_config.php)
+// recalcule toujours le total. Gardez ces valeurs alignées sur paiement_config.php.
+const IS_MA = API_BASE.endsWith('.ma');
+const BOOST_CUR = IS_MA ? 'DH' : '€';
+const BOOST_DUR = IS_MA ? {'3days':20,'7days':60,'30days':100,'8weeks':150} : {'3days':2,'7days':6,'30days':10,'8weeks':15};
+const BOOST_URGENT = IS_MA ? 30 : 10;
+const BOOST_PHOTO  = IS_MA ? 25 : 10;
+const BOOST_T = {
+  fr:{title:'Booster mon annonce',auto:'Remontée automatique',autoSub:'Votre annonce remonte en tête de liste',from:'dès',duration:'Durée',
+      urgent:'Badge Urgent',urgentSub:"Badge visible sur l'annonce",photo:'Mise en avant photo',photoSub:'Cadre doré autour de la photo',total:'Total',
+      pay:'Payer (PayPal / Carte / Virement)',note:"Le paiement s'ouvre dans votre navigateur, sur la page sécurisée du site.",
+      choose:'Choisissez au moins une option.',neterr:'Erreur réseau',err:'Erreur.',
+      d:{'3days':'3 jours','7days':'7 jours','30days':'30 jours','8weeks':'8 semaines'}},
+  en:{title:'Boost my ad',auto:'Automatic bump',autoSub:'Your ad moves back to the top of the list',from:'from',duration:'Duration',
+      urgent:'Urgent badge',urgentSub:'Badge shown on your ad',photo:'Photo highlight',photoSub:'Golden frame around the photo',total:'Total',
+      pay:'Pay (PayPal / Card / Bank transfer)',note:"Payment opens in your browser, on the site's secure page.",
+      choose:'Select at least one option.',neterr:'Network error',err:'Error.',
+      d:{'3days':'3 days','7days':'7 days','30days':'30 days','8weeks':'8 weeks'}},
+  ar:{title:'تعزيز إعلاني',auto:'الرفع التلقائي',autoSub:'يعود إعلانك إلى أعلى القائمة',from:'ابتداءً من',duration:'المدة',
+      urgent:'شارة عاجل',urgentSub:'شارة ظاهرة على الإعلان',photo:'إبراز الصورة',photoSub:'إطار ذهبي حول الصورة',total:'المجموع',
+      pay:'الدفع (PayPal / بطاقة / تحويل بنكي)',note:'يُفتح الدفع في متصفحك على صفحة الموقع الآمنة.',
+      choose:'اختر خيارًا واحدًا على الأقل.',neterr:'خطأ في الشبكة',err:'خطأ.',
+      d:{'3days':'3 أيام','7days':'7 أيام','30days':'30 يومًا','8weeks':'8 أسابيع'}},
+  es:{title:'Destacar mi anuncio',auto:'Subida automática',autoSub:'Tu anuncio vuelve a la parte superior de la lista',from:'desde',duration:'Duración',
+      urgent:'Insignia Urgente',urgentSub:'Insignia visible en el anuncio',photo:'Foto destacada',photoSub:'Marco dorado alrededor de la foto',total:'Total',
+      pay:'Pagar (PayPal / Tarjeta / Transferencia)',note:'El pago se abre en tu navegador, en la página segura del sitio.',
+      choose:'Elige al menos una opción.',neterr:'Error de red',err:'Error.',
+      d:{'3days':'3 días','7days':'7 días','30days':'30 días','8weeks':'8 semanas'}}
+};
+function bt(){ return BOOST_T[(typeof LANG !== 'undefined' && BOOST_T[LANG]) ? LANG : 'fr']; }
+let boostPending = false;
+
 function openBoostExternal(id){
-  window.open(API_BASE + '/payment_gateway.php?annonce_id=' + id + '&source=app', '_system');
+  const T = bt();
+  openSubpage(T.title, 'ads-edit');
+  const durOpts = Object.keys(BOOST_DUR).map(k =>
+    `<option value="${k}">${T.d[k]} — ${BOOST_DUR[k]} ${BOOST_CUR}</option>`).join('');
+  const row = (inputId, title, sub, price) => `
+    <label style="display:flex;gap:12px;align-items:flex-start;background:#fff;border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;cursor:pointer;">
+      <input type="checkbox" id="${inputId}" onchange="updateBoostTotal()" style="width:20px;height:20px;margin-top:2px;accent-color:var(--orange);">
+      <span style="flex:1;"><b style="font-size:14.5px;">${title}</b><br><span style="font-size:12.5px;color:var(--muted);">${sub}</span></span>
+      <b style="color:var(--orange-dark);white-space:nowrap;">${price}</b>
+    </label>`;
+  document.getElementById('subpageBody').innerHTML = `
+    ${row('bAuto', '🔝 ' + T.auto, T.autoSub, T.from + ' ' + Math.min(...Object.values(BOOST_DUR)) + ' ' + BOOST_CUR)}
+    <div class="field" id="bDurWrap" style="display:none;"><label>${T.duration}</label><select id="bDur" onchange="updateBoostTotal()">${durOpts}</select></div>
+    ${row('bUrgent', '⚡ ' + T.urgent, T.urgentSub, BOOST_URGENT + ' ' + BOOST_CUR)}
+    ${row('bPhoto', '🖼️ ' + T.photo, T.photoSub, BOOST_PHOTO + ' ' + BOOST_CUR)}
+    <div style="display:flex;justify-content:space-between;align-items:center;margin:16px 2px;">
+      <span style="font-weight:700;">${T.total}</span><span id="bTotal" style="font-size:20px;font-weight:800;color:var(--orange-dark);">0 ${BOOST_CUR}</span>
+    </div>
+    <div id="bMsg" style="color:#dc2626;font-size:13px;margin-bottom:10px;"></div>
+    <button class="btn" id="bPay" onclick="payBoost(${id})">${T.pay}</button>
+    <p style="font-size:12px;color:var(--muted);text-align:center;margin-top:10px;">${T.note}</p>`;
+  updateBoostTotal();
 }
+function updateBoostTotal(){
+  const auto = document.getElementById('bAuto').checked;
+  document.getElementById('bDurWrap').style.display = auto ? 'block' : 'none';
+  let total = 0;
+  if(auto) total += BOOST_DUR[document.getElementById('bDur').value] || 0;
+  if(document.getElementById('bUrgent').checked) total += BOOST_URGENT;
+  if(document.getElementById('bPhoto').checked)  total += BOOST_PHOTO;
+  document.getElementById('bTotal').textContent = total + ' ' + BOOST_CUR;
+}
+async function payBoost(id){
+  const T = bt();
+  const msg = document.getElementById('bMsg'), btn = document.getElementById('bPay');
+  msg.textContent = '';
+  const auto = document.getElementById('bAuto').checked;
+  const urgent = document.getElementById('bUrgent').checked;
+  const photo = document.getElementById('bPhoto').checked;
+  if(!auto && !urgent && !photo){ msg.textContent = T.choose; return; }
+  btn.disabled = true;
+  try{
+    // Le serveur renvoie une URL à usage unique qui ouvre la session dans le navigateur
+    const data = await apiFetch('/api_pay_token.php', {method:'POST', body: JSON.stringify({
+      annonce_id: id, auto_boost: auto, boost_duration: document.getElementById('bDur').value,
+      urgent_badge: urgent, photo_highlight: photo
+    })});
+    if(data.success && data.url){ boostPending = true; window.open(data.url, '_system'); }
+    else { msg.textContent = data.error || T.err; }
+  }catch(e){ msg.textContent = T.neterr + ' (' + (e && e.message ? e.message : e) + ')'; }
+  btn.disabled = false;
+}
+// Retour dans l'app après le paiement : on recharge la liste pour afficher le nouveau statut
+document.addEventListener('visibilitychange', function(){
+  if(!document.hidden && boostPending){ boostPending = false; openMesAnnonces(); }
+});
 
 /* ---------- MA MESSAGERIE ---------- */
 let currentChat = { annonceId:null, otherUserId:null, conversationId:null };
@@ -2135,6 +2222,11 @@ loadListings(null, 'homeList');
 checkAuth();
 const h = location.hash.replace('#','');
 if(['deposer','annonces'].includes(h)) go(h);
+// Retour depuis la page de paiement : lien direct vers « Mes annonces »
+if(h === 'mes-annonces'){
+  history.replaceState(null, '', location.pathname + location.search);
+  if(localStorage.getItem('oz_sid')) openMesAnnonces();
+}
 </script>
 <script>
 if('serviceWorker' in navigator){
