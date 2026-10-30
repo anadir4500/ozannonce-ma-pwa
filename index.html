@@ -230,6 +230,13 @@ nav button.active{color:var(--orange-dark);}
   font-weight:800;letter-spacing:.4px;padding:3px 7px;border-radius:14px 0 8px 0;z-index:2;
   box-shadow:0 1px 3px rgba(0,0,0,.25);}
 [dir=rtl] .new-badge{left:auto;right:10px;border-radius:0 14px 0 8px;}
+.ad-flags{position:absolute;top:8px;right:10px;display:flex;gap:4px;z-index:2;}
+[dir=rtl] .ad-flags{right:auto;left:10px;}
+.ad-flag{color:#fff;font-size:9px;font-weight:800;letter-spacing:.4px;padding:3px 7px;border-radius:10px;
+  box-shadow:0 1px 3px rgba(0,0,0,.25);}
+.ad-flag.boost{background:#f59e0b;}
+.ad-flag.urgent{background:#dc2626;}
+.ad-thumb.gold{box-shadow:0 0 0 3px #f5b301;}
 
 /* Visionneuse photos (lightbox) */
 /* Visionneuse photos (lightbox) */
@@ -612,6 +619,17 @@ function newBadge(a){
   return `<span class="new-badge">${lab}</span>`;
 }
 
+const FLAG_LABELS = {
+  boost:  {fr:'À LA UNE', en:'FEATURED', ar:'مميز',  es:'DESTACADO'},
+  urgent: {fr:'URGENT',   en:'URGENT',   ar:'عاجل',  es:'URGENTE'}
+};
+function flagsHtml(a){
+  const l = k => (FLAG_LABELS[k][LANG] || FLAG_LABELS[k].fr);
+  const out = (a.boosted ? `<span class="ad-flag boost">⭐ ${l('boost')}</span>` : '')
+            + (a.urgent  ? `<span class="ad-flag urgent">⚡ ${l('urgent')}</span>` : '');
+  return out ? `<div class="ad-flags">${out}</div>` : '';
+}
+
 function renderList(targetId, list, total){
   const el = document.getElementById(targetId);
   if(!list.length){
@@ -626,8 +644,8 @@ function renderList(targetId, list, total){
       : `<span>${m.icon}</span>`;
     return `
     <div class="ad-card" onclick="openDetail(${i})">
-      ${newBadge(a)}
-      <div class="ad-thumb" style="background:${m.color}">
+      ${newBadge(a)}${flagsHtml(a)}
+      <div class="ad-thumb${a.photo_highlight ? ' gold' : ''}" style="background:${m.color}">
         ${thumbInner}
       </div>
       <div class="ad-info">
