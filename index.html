@@ -46,7 +46,9 @@ header .sub{color:var(--muted);font-size:14px;margin-top:2px;}
 .search input{border:none;outline:none;flex:1 1 0;min-width:0;width:0;font-size:15px;background:transparent;}
 .search{box-sizing:border-box;max-width:100%;gap:8px;}
 .search .btn{white-space:nowrap;}
-.search span{font-size:18px;}
+.search > span{font-size:18px;}
+.search .btn.small{font-size:13.5px;font-weight:700;font-family:inherit;line-height:1.2;}
+.search .btn span{font:inherit;}
 
 /* Category grid */
 .cats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:22px;}
